@@ -6,7 +6,7 @@ const Hotel = require('../models/Hotel');
 //@access   Public
 exports.getBookings= async(req,res,next) => {
     let query;
-
+    
     //General users can see only their bookings!
     if (req.user.role !== 'admin') {
         query = Booking.find({user:req.user.id}).populate({
@@ -83,7 +83,7 @@ exports.getBooking= async(req,res,next) => {
 };
 
 //@desc     Add booking
-//@route    POST /api/v1/hospitals/:hotelId/bookings
+//@route    POST /api/v1/hotels/:hotelId/bookings
 //@access   Private
 exports.addBooking = async(req,res,next) => {
     try {
