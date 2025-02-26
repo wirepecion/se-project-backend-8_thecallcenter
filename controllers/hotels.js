@@ -43,7 +43,7 @@ exports.getHotels = async(req,res,next) => {
         const limit = parseInt(req.query.limit,10) || 25;
         const startIndex = (page-1)*limit;
         const endIndex = page*limit;
-        const total = await Hospital.countDocuments();
+        const total = await Hotell.countDocuments();
 
         query = query.skip(startIndex).limit(limit);
 
