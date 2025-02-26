@@ -1,61 +1,52 @@
 const User = require('../models/User');
 
-// @desc    Register user
-// @route   POST /api/v1/auth/register
-// @access  Public
+//@desc     Register user
+//@route    POST /api/v1/auth/register
+//@access   Public
+
 exports.register = async (req, res, next) => {
     try {
-        const { name, tel, email, password, role } = req.body;
+        const { name, email, password, role } = req.body;
 
         //Create user
         const user = await User.create({
             name,
-            tel,
             email,
             password,
             role
         });
 
         sendTokenResponse(user, 200, res);
+
     } catch (err) {
-        res.status(400).json({
-            success: false
-        });
+        res.status(400).json({success: false});
+        console.log(err.stack);
     }
 };
 
-// @desc    Login user
-// @route   POST /api/v1/auth/login
-// @access  Public
+//@desc     Login user
+//@route    POST /api/v1/auth/login
+//@access   Public
 exports.login = async (req, res, next) => {
     const { email, password } = req.body;
 
-    //Validate email and password
+    //Validate email & password
     if (!email || !password) {
-        return res.status(400).json({
-            success: false,
-            message: 'Please provide email and password'
-        });
+        return res.status(400).json({success: false, error: 'Please provide email and password'});
     }
 
     //Check for user
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-        return res.status(401).json({
-            success: false,
-            error: 'Invalid credentials'
-        });
+        return res.status(401).json({success: false, error: 'Invalid credentials'});
     }
 
     //Check if password matches
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-        return res.status(401).json({
-            success: false,
-            error: 'Invalid credentials'
-        });
+        return res.status(401).json({success: false, error: 'Invalid credentials'});
     }
 
     sendTokenResponse(user, 200, res);
@@ -75,22 +66,19 @@ const sendTokenResponse = (user, statusCode, res) => {
         options.secure = true;
     }
 
-    res
-        .status(statusCode)
-        .cookie('token', token, options)
-        .json({
-            success: true,
-            token
-        });
-};
+    res.status(statusCode).cookie('token', token, options).json({
+        success: true, 
+        token
+    });
+}
 
-// @desc    Get current logged in user
-// @route   POST /api/v1/auth/me
-// @access  Private
+//@desc     Get current logged in user
+//@route    GET /api/v1/auth/me
+//@access   Private
 exports.getMe = async (req, res, next) => {
     const user = await User.findById(req.user.id);
     res.status(200).json({
-        success: true,
+        success: true, 
         data: user
     });
 };

@@ -1,18 +1,15 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const mongoose=require('mongoose');
+const bcrypt=require('bcryptjs');
+const jwt=require('jsonwebtoken');
 
-const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Please add a name']
+const UserSchema=new mongoose.Schema({
+    name:{
+        type:String,
+        required:[true,'Please add a name']
     },
-    tel: {
-        type: String
-    },
-    email: {
+    email:{
         type: String,
-        required: [true, 'Please add an email'],
+        required:[true,'Please add an email'],
         unique: true,
         match: [
             /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
@@ -20,13 +17,13 @@ const UserSchema = new mongoose.Schema({
         ]
     },
     role: {
-        type: String,
-        enum: ['user', 'admin'],
+        type:String,
+        enum: ['user','admin'],
         default: 'user'
     },
     password: {
-        type: String,
-        required: [true, 'Please add a password'],
+        type:String,
+        required:[true,'Please add a password'],
         minlength: 6,
         select: false
     },
@@ -56,4 +53,4 @@ UserSchema.methods.matchPassword=async function(enteredPassword){
     return await bcrypt.compare(enteredPassword, this.password);
 }
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('User',UserSchema);
