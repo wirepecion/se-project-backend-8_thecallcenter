@@ -6,31 +6,26 @@ actor "Unregistered User" as unregisteredUser
 actor "Registered User" as registeredUser
 actor "Admin" as admin
 
-rectangle "Hotel Booking System Registration" {
+rectangle "Hotel Booking System" {
   usecase "Register" as register
   usecase "Login" as login
+  usecase "View hotels" as view
+  usecase "Manage Booking" as manageBooking
+  usecase "Manage hotel" as manageHotel
+  usecase "Logout" as logout
 }
 
 unregisteredUser -- register
 unregisteredUser -- login
-
-register -- registeredUser
-register -- admin
-
-login -- registeredUser
-login -- admin
-
-rectangle "Hotel Booking System" {
-  usecase "View hotels" as view
-  usecase "Manage Booking" as manageBooking
-  usecase "Manage Hotel" as manageHotel
-}
+unregisteredUser -- view
 
 registeredUser -- view
+registeredUser -- logout
 registeredUser -- manageBooking
 
-admin -- view
-admin -- manageBooking
-admin -- manageHotel
+logout -- admin
+view -- admin
+manageBooking -- admin
+manageHotel -- admin
 
 @enduml
