@@ -151,7 +151,7 @@ exports.updateBooking = async(req,res,next) => {
             });
         }
 
-        booking = await booking.findByIdAndUpdate(req.params.id, req.body, {
+        booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
             new:true,
             runValidators:true
         });
