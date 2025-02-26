@@ -1,10 +1,10 @@
-const Hospital = require('../models/Hospital');
-const Appointment = require('../models/Appointment');
+const Hotel = require('../models/Hotel');
+const Booking = require('../models/Booking');
 
-//@desc     Get all hospitals
-//@route    GET /api/v1/hospitals
+//@desc     Get all hotels
+//@route    GET /api/v1/hotels
 //@access   Public
-exports.getHospitals = async(req,res,next) => {
+exports.getHotels = async(req,res,next) => {
     try {
         let query;
 
@@ -23,7 +23,7 @@ exports.getHospitals = async(req,res,next) => {
         queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
         //Finding resource
-        query = Hospital.find(JSON.parse(queryStr)).populate('appointments');
+        query = Hotel.find(JSON.parse(queryStr)).populate('bookings');
 
         //Select Fields
         if (req.query.select) {
@@ -48,7 +48,7 @@ exports.getHospitals = async(req,res,next) => {
         query = query.skip(startIndex).limit(limit);
 
         //Executing query
-        const hospitals = await query;
+        const hotels = await query;
 
         //Pagination result
         const pagination = {};
@@ -70,78 +70,78 @@ exports.getHospitals = async(req,res,next) => {
         console.log(req.query);
         res.status(200).json({
             success:true, 
-            count:hospitals.length, 
+            count:hotels.length, 
             pagination,
-            data:hospitals});
+            data:hotels});
     } catch (err) {
         res.status(400).json({success:false});
     }
 };
 
-//@desc     Get single hospital
-//@route    GET /api/v1/hospitals/:id
+//@desc     Get single hotel
+//@route    GET /api/v1/hotels/:id
 //@access   Public
-exports.getHospital= async(req,res,next) => {
+exports.getHotel= async(req,res,next) => {
     try {
-        const hospital = await Hospital.findById(req.params.id);
+        const hotel = await Hotel.findById(req.params.id);
 
-        if (!hospital) {
+        if (!hotel) {
             return res.status(400).json({success:false});
         }
 
-        res.status(200).json({success:true, data:hospital});
+        res.status(200).json({success:true, data:hotel});
     } catch (err) {
         res.status(400).json({success:false});
     }
 };
 
-//@desc     Create a hospital
-//@route    POST /api/v1/hospitals
+//@desc     Create a hotel
+//@route    POST /api/v1/hotels
 //@access   Private
-exports.createHospital= async(req,res,next) => {
-    const hospital = await Hospital.create(req.body);
+exports.createHotel= async(req,res,next) => {
+    const hotel = await Hotel.create(req.body);
     res.status(201).json({
         success:true, 
-        data:hospital
+        data:hotel
     });
 };
 
-//@desc     Update single hospital
-//@route    PUT /api/v1/hospitals/:id
+//@desc     Update single hotel
+//@route    PUT /api/v1/hotels/:id
 //@access   Private
-exports.updateHospital= async (req,res,next) => {
+exports.updateHotel= async (req,res,next) => {
     try {
-        const hospital = await Hospital.findByIdAndUpdate(req.params.id, req.body, {
+        const hotel = await Hotel.findByIdAndUpdate(req.params.id, req.body, {
             new:true,
             runValidators:true
         });
 
-        if (!hospital) {
+        if (!hotel) {
             return res.status(400).json({success:false});
         }
 
-        res.status(200).json({success:true, data:hospital});
+        res.status(200).json({success:true, data:hotel});
     } catch (err) {
         res.status(400).json({success:false});
     }
 };
 
-//@desc     Delete single hospital
-//@route    DELETE /api/v1/hospitals/:id
+//@desc     Delete single hotel
+//@route    DELETE /api/v1/hotels/:id
 //@access   Private
-exports.deleteHospital= async(req,res,next) => {
+exports.deleteHotel= async(req,res,next) => {
     try {
-        const hospital = await Hospital.findById(req.params.id);
+        const hotel = await Hotel.findById(req.params.id);
 
-        if (!hospital) {
+        if (!hotel) {
             return res.status(400).json({
                 success:false,
-                message: `Hospital not found with id of ${req.params.id}`
+                message: `Hotel not found with id of ${req.params.id}`
             });
         }
 
-        await Appointment.deleteMany({hospital:req.params.id});
-        await Hospital.deleteOne({_id:req.params.id});
+        await Booking.deleteMany({hotel:req.params.id});
+        await Hotel.deleteOne({_id:req.params.id});
 
         res.status(200).json({success:true, data:{}});
     } catch (err) {
