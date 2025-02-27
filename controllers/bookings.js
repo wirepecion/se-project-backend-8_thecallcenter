@@ -213,6 +213,15 @@ exports.deleteBooking = async(req,res,next) => {
             });
         }
 
+        //User must delete the booking seven days before the check-in date
+        const bookingDate = booking.bookingDate;
+        if (bookingDate - Date.now() < 7 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+            return res.status(400).json({
+                success:false,
+                message: "User must delete the booking 7 days before the check-in date"
+            });
+        }
+
         await booking.deleteOne();
 
         res.status(200).json({
