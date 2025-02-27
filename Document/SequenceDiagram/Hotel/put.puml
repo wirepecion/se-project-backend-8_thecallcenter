@@ -1,8 +1,8 @@
-@startuml 1
+@startuml Hotel Put
 
 header Sameple Hotel Booking Sequence Diagram
 footer Page %page% of %lastpage%
-title "Manage Hotel (GET ALL)"
+title "Manage Hotel (PUT)"
 
 participant "Client" as client
 participant "<<javaScript>>\n:server" as server
@@ -11,10 +11,10 @@ participant "<<controllers>>\n:hotels" as controllersHotels
 participant "<<model>>\n:Hotel" as modelHotel
 database "<<MongoDB>>\n:hotels" as HotelsDatabase
 
-client->server++:req.get('/api/v1/hotels')
+client->server++:req.put('/api/v1/hotels/:id')
 server->routerHotels++:app.use('/api/v1/hotels',hotels)
-routerHotels->controllersHotels++:getHotels
-controllersHotels->modelHotel ++:create(req.body)
+routerHotels->controllersHotels++:updateHotel
+controllersHotels->modelHotel ++:findByIdAndUpdate(req.params.id, req.body)
 modelHotel ->HotelsDatabase ++: HotelSchema
 HotelsDatabase --> modelHotel --: hotel
 controllersHotels <-- modelHotel --:hotel
