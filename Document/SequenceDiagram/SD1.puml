@@ -1,3 +1,5 @@
+@startuml 1
+
 header Sameple Hotel Booking Sequence Diagram
 footer Page %page% of %lastpage%
 title "Manage Hotel (GET ALL)"
