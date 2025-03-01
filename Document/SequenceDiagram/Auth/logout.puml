@@ -1,0 +1,17 @@
+@startuml Logout
+
+header Sample Hotel Authentication Sequence Diagram
+footer Page %page% of %lastpage%
+title "User Logout Process"
+
+participant "Client" as client
+participant "<<JavaScript>>\n:Server" as server
+participant "<<Router>>\n:auth" as routerAuth
+participant "<<Controllers>>\n:auth" as controllerAuth
+
+client -> server++: req.get('/api/v1/auth/logout')
+server -> routerAuth++: app.use('/api/v1/auth', authRoutes)
+routerAuth -> controllerAuth++: logout(req, res)
+controllerAuth -> client --: Clear token (cookie/local storage) & Response
+
+@enduml
