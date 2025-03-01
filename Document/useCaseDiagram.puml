@@ -9,9 +9,9 @@ actor "Admin" as admin
 rectangle "Hotel Booking System" {
   usecase "Register" as register
   usecase "Login" as login
-  usecase "View hotels" as view
+  usecase "View Hotels" as view
   usecase "Manage Booking" as manageBooking
-  usecase "Manage hotel" as manageHotel
+  usecase "Manage Hotel" as manageHotel
   usecase "Logout" as logout
 }
 
