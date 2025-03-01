@@ -1,0 +1,24 @@
+@startuml Login
+
+header Sample Hotel Authentication Sequence Diagram
+footer Page %page% of %lastpage%
+title "User Login Process"
+
+participant "Client" as client
+participant "<<JavaScript>>\n:Server" as server
+participant "<<Router>>\n:auth" as routerAuth
+participant "<<Controllers>>\n:auth" as controllerAuth
+participant "<<Model>>\n:User" as modelUser
+database "<<MongoDB>>\n:users" as UsersDatabase
+
+client -> server++: req.post('/api/v1/auth/login')
+server -> routerAuth++: app.use('/api/v1/auth', authRoutes)
+routerAuth -> controllerAuth++: login(req, res)
+controllerAuth -> modelUser ++: findOne({ email })
+modelUser -> UsersDatabase ++: Query user by email
+UsersDatabase --> modelUser --: User data
+controllerAuth -> controllerAuth: Validate password
+controllerAuth -> controllerAuth: Generate JWT token
+controllerAuth -> client --: Response with token
+
+@enduml
