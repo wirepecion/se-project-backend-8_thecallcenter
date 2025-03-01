@@ -1,0 +1,69 @@
+@startuml
+left to right direction
+package "Hotel" {
+    class "<<Application>>\nHotelService" as HotelService {}
+
+    class "<<Resource>>\nHotels" as ResourceHotels {
+        <<GET>> +getHotels(): List<Hotel>
+        <<POST>> +createHotel(Hotel): Hotel
+    }
+    
+    class "<<Resource>>\nHotel" as ResourceHotel {
+        <<GET>> +getHotel(id): Hotel
+        <<PUT>> +updateHotel(id, Hotel): Hotel
+        <<DELETE>> +deleteHotel(id): void
+    }
+    
+    class "<<Resource>>\nRooms" as ResourceRooms {
+        <<GET>> +getRooms(): List<Room>
+        <<POST>> +createRoom(Room): Room
+    }
+    
+    class "<<Resource>>\nBookings" as ResourceBookings {
+        <<GET>> +getBookings(): List<Booking>
+        <<POST>> +createBooking(Booking): Booking
+    }
+    
+    class "<<Representation>>\nHotel" as RepresentationHotel {
+        -name
+        -address
+        -List<Room> rooms
+    }
+    
+    class "<<Representation>>\nRoom" as RepresentationRoom {
+        -roomNumber
+        -type
+        -price
+        -isAvailable
+    }
+    
+    class "<<Representation>>\nBooking" as RepresentationBooking {
+        -bookingId
+        -startDate
+        -endDate
+        -Customer customer
+        -Room room
+    }
+    
+    class "<<Representation>>\nCustomer" as RepresentationCustomer {
+        -customerId
+        -name
+        -email
+        -phone
+    }
+}
+
+HotelService ..> ResourceHotels: "/hotels\n<<Path>>"
+ResourceHotels ..> ResourceHotel: "/{hotelId}\n<<Path>>"
+ResourceHotel ..> RepresentationHotel: "<<use>>"
+
+HotelService ..> ResourceRooms: "/rooms\n<<Path>>"
+ResourceRooms ..> RepresentationRoom: "<<use>>"
+
+HotelService ..> ResourceBookings: "/bookings\n<<Path>>"
+ResourceBookings ..> RepresentationBooking: "<<use>>"
+
+RepresentationBooking ..> RepresentationCustomer: "<<use>>"
+RepresentationBooking ..> RepresentationRoom: "<<use>>"
+
+@enduml
