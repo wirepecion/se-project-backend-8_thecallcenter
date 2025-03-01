@@ -113,13 +113,22 @@ exports.addBooking = async(req,res,next) => {
         req.body.user = req.user.id;
 
         //Check for existing appointment
-        const existedBooking = await Booking.find({user:req.user.id});
+        const checkInDate = new Date(req.body.checkInDate);
+        const checkOutDate = new Date(req.body.checkOutDate);
 
-        //If the user is not an admin, they can only create 3 appointments
-        if (existedBooking.length >= 3 && req.user.role !== 'admin') {
+        //Check-out date must be after the check-in date
+        if (checkOutDate <= checkInDate) {
             return res.status(400).json({
                 success:false,
-                message: `The user with ID ${req.user.id} has already made 3 bookings`
+                message: `Please choose a check-out date that is after the check-in date`
+            });
+        }
+
+        //If the user is not an admin, they can only book up to 3 nights
+        if (checkOutDate - checkInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+            return res.status(400).json({
+                success:false,
+                message: `User can only book up to 3 nights`
             });
         }
 
