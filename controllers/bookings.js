@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
+const { checkout } = require('../routes/auth');
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -178,6 +179,70 @@ exports.updateBooking = async(req,res,next) => {
                 success:false,
                 message: `User ${req.user.id} is not authorized to update this booking`
             });
+        }
+
+        //Check if check-in or check-out dates are being updated
+        const { checkInDate, checkOutDate } = req.body;
+
+        if (checkInDate && checkOutDate) {
+            const newCheckInDate = new Date(checkInDate);
+            const newCheckOutDate = new Date(checkOutDate);
+
+            //Check-out date must be after the check-in date
+            if (newCheckOutDate <= newCheckInDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Check-out date must be after check-in date.'
+                });
+            }
+
+            //If the user is not an admin, they can only book up to 3 nights
+            if (newCheckOutDate - newCheckInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'User can only book up to 3 nights.'
+                });
+            }
+        }
+
+        if (checkInDate && !checkOutDate) {
+            const newCheckInDate = new Date(checkInDate);
+
+            //Check-out date must be after the check-in date
+            if (booking.checkOutDate <= newCheckInDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Check-out date must be after check-in date.'
+                });
+            }
+
+            //If the user is not an admin, they can only book up to 3 nights
+            if (booking.checkOutDate - newCheckInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'User can only book up to 3 nights.'
+                });
+            }
+        }
+
+        if (!checkInDate && checkOutDate) {
+            const newCheckOutDate = new Date(checkOutDate);
+
+            //Check-out date must be after the check-in date
+            if (newCheckOutDate <= booking.checkInDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Check-out date must be after check-in date.'
+                });
+            }
+
+            //If the user is not an admin, they can only book up to 3 nights
+            if (newCheckOutDate - booking.checkInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'User can only book up to 3 nights.'
+                });
+            }
         }
 
         booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
