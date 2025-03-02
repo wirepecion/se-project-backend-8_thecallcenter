@@ -106,7 +106,7 @@ exports.getBooking= async(req,res,next) => {
 };
 
 //@desc     Add booking
-//@route    POST /api/v1/hotels/:hotelId/bookings
+//@route    POST /api/v1/rooms/:roomId/bookings
 //@access   Private
 exports.addBooking = async(req,res,next) => {
     try {
@@ -147,7 +147,7 @@ exports.addBooking = async(req,res,next) => {
         const room = await Room.findById(roomId);
 
         // Step 2: Check room availability (you can add your custom logic here)
-        const isUnavailable = room.availablePeriod.some(period => {
+        const isUnavailable = room.unavailablePeriod.some(period => {
             const checkIn = new Date(checkInDate);
             const checkOut = new Date(checkOutDate);
 
@@ -177,7 +177,7 @@ exports.addBooking = async(req,res,next) => {
         await booking.save(); // Save booking
 
         // Step 4: Update room availability (deduct the booking dates from available periods)
-        room.availablePeriod = room.availablePeriod.map(period => {
+        room.unavailablePeriod = room.unavailablePeriod.map(period => {
             const checkIn = new Date(checkInDate);
             const checkOut = new Date(checkOutDate);
 
