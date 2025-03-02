@@ -1,5 +1,7 @@
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
+const Payment = require('../models/Payment');
+const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
 
 //@desc     Get all bookings
@@ -108,15 +110,17 @@ exports.getBooking= async(req,res,next) => {
 //@access   Private
 exports.addBooking = async(req,res,next) => {
     try {
-        req.body.hotel = req.params.hotelId;
 
-        //Add user to req.body
-        req.body.user = req.user.id;
+        const roomId = req.params.roomId;
+        const userId = req.user.id;
 
-        //Check for existing appointment
-        const checkInDate = new Date(req.body.checkInDate);
-        const checkOutDate = new Date(req.body.checkOutDate);
+        // Step 1: Validate check-in and check-out dates
+        const { checkInDate, checkOutDate, paymentMethod } = req.body;
 
+        const newCheckInDate = new Date(checkInDate);
+        const newCheckOutDate = new Date(checkOutDate);
+
+        
         //Check-out date must be after the check-in date
         if (checkOutDate <= checkInDate) {
             return res.status(400).json({
@@ -133,27 +137,59 @@ exports.addBooking = async(req,res,next) => {
             });
         }
 
-        const hotel = await Hotel.findById(req.params.hotelId);
-
-        if (!hotel) {
-            return res.status(404).json({
-                success:false,
-                message: `No hotel with the id of ${req.params.hotelId}`
+        if (!paymentMethod) {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment method is required.'
             });
         }
 
-        const booking = await Booking.create(req.body);
+        // Step 2: Check room availability (you can add your custom logic here)
+        const room = await Room.findById(roomId); 
+        if (!room || room.availablePeriod.some(date => date === newCheckInDate)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Room not available for booking.'
+            });
+        }
 
-        res.status(200).json({
-            success:true, 
-            data:booking
+        // Step 3: Create a booking
+        const booking = new Booking({
+            user: userId,
+            room: roomId,
+            hotel: room.hotel,
+            checkInDate: newCheckInDate,
+            checkOutDate: newCheckOutDate,
         });
+        await booking.save(); // Save booking
 
+        // Step 4: Update room availability (deduct the booking dates from available dates)
+        room.availablePeriod = room.availablePeriod.filter(
+            date => date !== newCheckInDate && date !== newCheckOutDate
+        );
+        await room.save(); // Update room within the transaction
+
+        // Step 5: Process payment
+        const payment = new Payment({
+            booking: booking._id,
+            user: userId,
+            amount: room.price,
+            status: 'unpaid',
+            method: paymentMethod,
+        });
+        await payment.save(); // Save payment within the transaction
+
+        // Respond with the success response
+        res.status(201).json({
+            success: true,
+            message: 'Booking successfully created',
+            data: booking,
+        });
     } catch (error) {
-        console.log(error);
+        console.error('Transaction failed:', error);
         res.status(500).json({
-            success:false,
-            message: "Cannot create Booking"
+            success: false,
+            message: 'Transaction failed. Please try again.',
         });
     }
 
