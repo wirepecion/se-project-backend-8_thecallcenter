@@ -144,9 +144,22 @@ exports.addBooking = async(req,res,next) => {
             });
         }
 
+        const room = await Room.findById(roomId);
+
         // Step 2: Check room availability (you can add your custom logic here)
-        const room = await Room.findById(roomId); 
-        if (!room || room.availablePeriod.some(date => date === newCheckInDate)) {
+        const isUnavailable = room.availablePeriod.some(period => {
+            const checkIn = new Date(checkInDate);
+            const checkOut = new Date(checkOutDate);
+
+            // Check if the booking dates overlap with any available period
+            return (
+                (checkIn >= new Date(period.startDate) && checkIn <= new Date(period.endDate)) ||
+                (checkOut >= new Date(period.startDate) && checkOut <= new Date(period.endDate)) ||
+                (checkIn <= new Date(period.startDate) && checkOut >= new Date(period.endDate))
+            );
+        });
+
+        if (isUnavailable) {
             return res.status(400).json({
                 success: false,
                 message: 'Room not available for booking.'
@@ -163,11 +176,29 @@ exports.addBooking = async(req,res,next) => {
         });
         await booking.save(); // Save booking
 
-        // Step 4: Update room availability (deduct the booking dates from available dates)
-        room.availablePeriod = room.availablePeriod.filter(
-            date => date !== newCheckInDate && date !== newCheckOutDate
-        );
-        await room.save(); // Update room within the transaction
+        // Step 4: Update room availability (deduct the booking dates from available periods)
+        room.availablePeriod = room.availablePeriod.map(period => {
+            const checkIn = new Date(checkInDate);
+            const checkOut = new Date(checkOutDate);
+
+            // If booking dates overlap with any period, remove it from availablePeriod
+            if (checkIn <= new Date(period.endDate) && checkOut >= new Date(period.startDate)) {
+                // If the booking period is completely inside the available period
+                if (checkIn > new Date(period.startDate) && checkOut < new Date(period.endDate)) {
+                    // Split the period into two new available periods
+                    return [
+                        { startDate: period.startDate, endDate: new Date(checkIn).toISOString() },
+                        { startDate: new Date(checkOut).toISOString(), endDate: period.endDate }
+                    ];
+                } else {
+                    // If the period is fully booked, remove it
+                    return null;
+                }
+            }
+            return period;
+        }).filter(Boolean); // Remove any `null` periods
+
+        await room.save(); // Save updated room
 
         // Step 5: Process payment
         const payment = new Payment({
