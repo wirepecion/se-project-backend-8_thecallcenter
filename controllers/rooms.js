@@ -24,7 +24,7 @@ exports.getRooms = async(req,res,next) => {
         queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
         //Finding resource
-        query = Room.find(JSON.parse(queryStr)).populate({path: 'Hotel'});
+        query = Room.find(JSON.parse(queryStr)).populate({path: 'hotel', select: 'name'});
 
         //Select Fields
         if (req.query.select) {
@@ -84,7 +84,7 @@ exports.getRooms = async(req,res,next) => {
 //@access   Public
 exports.getRoom= async(req,res,next) => {
     try {
-        const room = await Room.findById(req.params.id).populate({path: 'Hotel'});
+        const room = await Room.findById(req.params.id).populate({path: 'hotel', select: 'name'});
 
         if (!room) {
             return res.status(400).json({success:false});
@@ -131,7 +131,7 @@ exports.createRoom= async(req,res,next) => {
 //@route    PUT /api/v1/rooms/:id
 //@access   Private
 exports.updateRoom = async (req, res) => {
-    const { roomId } = req.params; // Room ID to update
+    const roomId = req.params.id; // Room ID to update
     const { hotel, type, number, price, availablePeriod } = req.body; // Fields to update
 
     try {
