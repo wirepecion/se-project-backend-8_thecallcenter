@@ -29,4 +29,11 @@ HotelSchema.virtual('bookings',{
     justOne:false
 });
 
+HotelSchema.virtual('rooms',{
+    ref:'Room',
+    localField:'_id',
+    foreignField:'hotel',
+    justOne:false
+});
+
 module.exports=mongoose.model('Hotel',HotelSchema);
