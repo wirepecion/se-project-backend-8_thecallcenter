@@ -1,4 +1,5 @@
 const Review = require('../models/Review');
+const mongoose = require('mongoose');
 const Hotel = require('../models/Hotel');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
@@ -6,37 +7,54 @@ const Booking = require('../models/Booking');
 //@desc     Get all reviews
 //@route    GET /api/v1/reviews
 //@access   Public
-exports.getReviews= async(req,res,next) => {
-    try {
-        if (req.params.hotelId) {
-            const reviews = await Review.find({hotel:req.params.hotelId});
-            return res.status(200).json({success:true, count:reviews.length, data:reviews});
-        } else {
-            res.status(200).json(res.advancedResults);
-        }
-    } catch (err) {
-        res.status(400).json({success:false});
-    }
+exports.getReviews = async (req, res, next) => {
+  try {
+      let reviews;
+
+      if (req.params.hotelId) {
+          reviews = await Review.find({
+              hotel: new mongoose.Types.ObjectId(req.params.hotelId)
+          }).populate("user", "name");
+      } else {
+          reviews = await Review.find().populate("user", "name");
+      }
+
+      res.status(200).json({
+          success: true,
+          count: reviews.length,
+          data: reviews
+      });
+  } catch (err) {
+      res.status(400).json({ success: false, message: err.message });
+  }
 };
+
 
 //@desc     Get single review
 //@route    GET /api/v1/reviews/:id
 //@access   Public
 exports.getReview = async (req, res) => {
-    try {
-      const { hotelId } = req.params;
-  
-      // Fetch reviews for a hotel, sorted by likes and created date
-      const reviews = await Review.find({ hotel: hotelId })
-        .populate("user", "name") // Populate user data (e.g. name)
-        .sort({ likes: -1, createdAt: -1 }) // Most helpful and then newest first
-        .exec();
-  
-      res.json({ success: true, data: reviews });
-    } catch (error) {
-      res.status(400).json({ success: false, message: error.message });
+  try {
+    const { id } = req.params;
+
+    // Validate if ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid review ID format" });
     }
-  };
+
+    const review = await Review.findById(id).populate("user", "name");
+
+    if (!review) {
+      return res.status(404).json({ success: false, message: "Review not found" });
+    }
+
+    res.status(200).json({ success: true, data: review });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+
 
 //@desc     Create a review
 //@route    POST /api/v1/reviews
@@ -57,9 +75,10 @@ exports.createReview = async (req, res) => {
       }
   
       // Ensure today is AFTER check-out date
-      const today = new Date();
-      if (today <= booking.checkOutDate) {
-        return res.status(403).json({ message: "You can only review after check-out." });
+      const today = Date.now;
+      const checkOutDate = new Date(booking.checkOutDate);
+      if (today <= checkOutDate) {
+        return res.status(403).json({ today: today, message: "You can only review after check-out." });
       }
   
       // Check if review already exists for the user and hotel
