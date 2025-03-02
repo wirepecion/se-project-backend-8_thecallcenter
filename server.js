@@ -17,6 +17,7 @@ connectDB();
 const hotels = require ('./routes/hotels');
 const bookings = require('./routes/bookings');
 const reviews = require('./routes/reviews');
+const rooms = require('./routes/rooms');
 const auth = require('./routes/auth');
 const rateLimit = require('express-rate-limit');
     
@@ -37,6 +38,7 @@ app.use(limiter);
 app.use('/api/v1/hotels',hotels);
 app.use('/api/v1/bookings',bookings);
 app.use('/api/v1/reviews',reviews);
+app.use('/api/v1/rooms',rooms);
 app.use('/api/v1/auth',auth);
 
 //Prevent http param pollution
