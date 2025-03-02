@@ -113,11 +113,11 @@ exports.createRoom= async(req,res,next) => {
         }
 
         // Create a new room
-        const newRoom = new Room.create(req.body.hotel);
+        const room = await Room.create(req.body);
 
         res.status(201).json({
             success: true,
-            data: newRoom
+            data: room
         });
     } catch (error) {
         res.status(500).json({
