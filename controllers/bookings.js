@@ -156,12 +156,6 @@ exports.addBooking = async (req, res, next) => {
             });
         }
 
-        // Step 2: Check room availability (you can add your custom logic here)
-        const isUnavailable = room.unavailablePeriod.some(period => {
-            const checkIn = new Date(checkInDate);
-            const checkOut = new Date(checkOutDate);
-        }
-
         // Check if the room is available during the requested dates
         const isUnavailable = room.unavailablePeriod.some((period) => {
             const periodStart = new Date(period.startDate);
