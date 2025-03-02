@@ -9,6 +9,7 @@ router.route("/")
     .post(protect, authorize('admin', 'user'), createReview); // Add review
 
 router.route("/:hotelId")
+    .get(protect, getReviews) // Get reviews for a hotel
     .get(protect, getReview); // Get reviews for a hotel
 
 router.route("/:reviewId")
