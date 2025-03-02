@@ -103,7 +103,7 @@ exports.createRoom= async(req,res,next) => {
     try {
         req.body.hotel = req.params.hotelId;
 
-        const { type, number, price, availablePeriod } = req.body;
+        const { type, number, price, unavailablePeriod } = req.body;
 
         // Find the hotel by ID
         const hotel = await Hotel.findById(req.params.hotelId);
@@ -127,8 +127,9 @@ exports.createRoom= async(req,res,next) => {
             type,
             number,
             price,
-            availablePeriod
+            unavailablePeriod
         })
+        await room.save();
 
         res.status(201).json({
             success: true,

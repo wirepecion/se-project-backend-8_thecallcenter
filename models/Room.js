@@ -19,7 +19,7 @@ const RoomSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    availablePeriod:[{
+    unavailablePeriod:[{
         startDate:{
             type: Date,
             required: true

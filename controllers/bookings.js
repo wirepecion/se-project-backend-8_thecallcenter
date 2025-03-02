@@ -106,67 +106,77 @@ exports.getBooking= async(req,res,next) => {
 };
 
 //@desc     Add booking
-//@route    POST /api/v1/hotels/:hotelId/bookings
+//@route    POST /api/v1/rooms/:roomId/bookings
 //@access   Private
-exports.addBooking = async(req,res,next) => {
+exports.addBooking = async (req, res, next) => {
     try {
-
         const roomId = req.params.roomId;
         const userId = req.user.id;
 
         // Step 1: Validate check-in and check-out dates
         const { checkInDate, checkOutDate, paymentMethod } = req.body;
 
+        // Ensure that dates are valid Date objects
         const newCheckInDate = new Date(checkInDate);
         const newCheckOutDate = new Date(checkOutDate);
 
-        
-        //Check-out date must be after the check-in date
-        if (checkOutDate <= checkInDate) {
+        // Ensure check-out date is after check-in date
+        if (newCheckOutDate <= newCheckInDate) {
             return res.status(400).json({
-                success:false,
-                message: `Please choose a check-out date that is after the check-in date`
+                success: false,
+                message: `Please choose a check-out date that is after the check-in date.`,
             });
         }
 
-        //If the user is not an admin, they can only book up to 3 nights
-        if (checkOutDate - checkInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+        // Users can book up to 3 nights, but admins can book more
+        const maxNights = 3 * 24 * 60 * 60 * 1000; 
+        if (newCheckOutDate - newCheckInDate > maxNights && req.user.role !== 'admin') {
             return res.status(400).json({
-                success:false,
-                message: `User can only book up to 3 nights`
+                success: false,
+                message: `User can only book up to 3 nights.`,
             });
         }
 
+        // Payment method validation
         if (!paymentMethod) {
             return res.status(400).json({
                 success: false,
-                message: 'Payment method is required.'
+                message: 'Payment method is required.',
             });
         }
 
+        // Step 2: Fetch room and check availability
         const room = await Room.findById(roomId);
 
-        // Step 2: Check room availability (you can add your custom logic here)
-        const isUnavailable = room.availablePeriod.some(period => {
-            const checkIn = new Date(checkInDate);
-            const checkOut = new Date(checkOutDate);
+        // Check if the room exists
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                message: 'Room not found.',
+            });
+        }
 
-            // Check if the booking dates overlap with any available period
+        // Check if the room is available during the requested dates
+        const isUnavailable = room.unavailablePeriod.some((period) => {
+            const periodStart = new Date(period.startDate);
+            const periodEnd = new Date(period.endDate);
+
+            // Check for overlap with any unavailable period
             return (
-                (checkIn >= new Date(period.startDate) && checkIn <= new Date(period.endDate)) ||
-                (checkOut >= new Date(period.startDate) && checkOut <= new Date(period.endDate)) ||
-                (checkIn <= new Date(period.startDate) && checkOut >= new Date(period.endDate))
+                (newCheckInDate >= periodStart && newCheckInDate < periodEnd) ||
+                (newCheckOutDate > periodStart && newCheckOutDate <= periodEnd) ||
+                (newCheckInDate <= periodStart && newCheckOutDate >= periodEnd)
             );
         });
 
         if (isUnavailable) {
             return res.status(400).json({
                 success: false,
-                message: 'Room not available for booking.'
+                message: 'Room not available for booking.',
             });
         }
 
-        // Step 3: Create a booking
+        // Step 3: Create the booking
         const booking = new Booking({
             user: userId,
             room: roomId,
@@ -176,29 +186,14 @@ exports.addBooking = async(req,res,next) => {
         });
         await booking.save(); // Save booking
 
-        // Step 4: Update room availability (deduct the booking dates from available periods)
-        room.availablePeriod = room.availablePeriod.map(period => {
-            const checkIn = new Date(checkInDate);
-            const checkOut = new Date(checkOutDate);
+        // Step 4: Add the booking period to the unavailablePeriod array
+        room.unavailablePeriod.push({
+            startDate: newCheckInDate.toISOString(),
+            endDate: newCheckOutDate.toISOString(),
+        });
 
-            // If booking dates overlap with any period, remove it from availablePeriod
-            if (checkIn <= new Date(period.endDate) && checkOut >= new Date(period.startDate)) {
-                // If the booking period is completely inside the available period
-                if (checkIn > new Date(period.startDate) && checkOut < new Date(period.endDate)) {
-                    // Split the period into two new available periods
-                    return [
-                        { startDate: period.startDate, endDate: new Date(checkIn).toISOString() },
-                        { startDate: new Date(checkOut).toISOString(), endDate: period.endDate }
-                    ];
-                } else {
-                    // If the period is fully booked, remove it
-                    return null;
-                }
-            }
-            return period;
-        }).filter(Boolean); // Remove any `null` periods
-
-        await room.save(); // Save updated room
+        // Save the updated room with the new unavailable period
+        await room.save();
 
         // Step 5: Process payment
         const payment = new Payment({
@@ -208,7 +203,7 @@ exports.addBooking = async(req,res,next) => {
             status: 'unpaid',
             method: paymentMethod,
         });
-        await payment.save(); // Save payment within the transaction
+        await payment.save(); // Save payment
 
         // Respond with the success response
         res.status(201).json({
@@ -223,7 +218,6 @@ exports.addBooking = async(req,res,next) => {
             message: 'Transaction failed. Please try again.',
         });
     }
-
 };
 
 //@desc     Update booking
