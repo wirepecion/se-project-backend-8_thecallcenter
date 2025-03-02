@@ -148,7 +148,6 @@ exports.addBooking = async (req, res, next) => {
         // Step 2: Fetch room and check availability
         const room = await Room.findById(roomId);
 
-<<<<<<< HEAD
         // Check if the room exists
         if (!room) {
             return res.status(404).json({
@@ -156,17 +155,12 @@ exports.addBooking = async (req, res, next) => {
                 message: 'Room not found.',
             });
         }
-||||||| d5db862
-        // Step 2: Check room availability (you can add your custom logic here)
-        const isUnavailable = room.availablePeriod.some(period => {
-            const checkIn = new Date(checkInDate);
-            const checkOut = new Date(checkOutDate);
-=======
+
         // Step 2: Check room availability (you can add your custom logic here)
         const isUnavailable = room.unavailablePeriod.some(period => {
             const checkIn = new Date(checkInDate);
             const checkOut = new Date(checkOutDate);
->>>>>>> 59635339b1e2cbc44c92fc5f86a0d36d6e80d0ec
+        }
 
         // Check if the room is available during the requested dates
         const isUnavailable = room.unavailablePeriod.some((period) => {
@@ -198,23 +192,11 @@ exports.addBooking = async (req, res, next) => {
         });
         await booking.save(); // Save booking
 
-<<<<<<< HEAD
         // Step 4: Add the booking period to the unavailablePeriod array
         room.unavailablePeriod.push({
             startDate: newCheckInDate.toISOString(),
             endDate: newCheckOutDate.toISOString(),
         });
-||||||| d5db862
-        // Step 4: Update room availability (deduct the booking dates from available periods)
-        room.availablePeriod = room.availablePeriod.map(period => {
-            const checkIn = new Date(checkInDate);
-            const checkOut = new Date(checkOutDate);
-=======
-        // Step 4: Update room availability (deduct the booking dates from available periods)
-        room.unavailablePeriod = room.unavailablePeriod.map(period => {
-            const checkIn = new Date(checkInDate);
-            const checkOut = new Date(checkOutDate);
->>>>>>> 59635339b1e2cbc44c92fc5f86a0d36d6e80d0ec
 
         // Save the updated room with the new unavailable period
         await room.save();
