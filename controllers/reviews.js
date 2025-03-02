@@ -75,10 +75,10 @@ exports.createReview = async (req, res) => {
       }
   
       // Ensure today is AFTER check-out date
-      
-      const today = new Date();
-      if (today <= new Date(booking.checkOutDate)) {
-        return res.status(403).json({ message: "You can only review after check-out." });
+      const today = Date.now;
+      const checkOutDate = new Date(booking.checkOutDate);
+      if (today <= checkOutDate) {
+        return res.status(403).json({ today: today, message: "You can only review after check-out." });
       }
   
       // Check if review already exists for the user and hotel
