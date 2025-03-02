@@ -103,6 +103,8 @@ exports.createRoom= async(req,res,next) => {
     try {
         req.body.hotel = req.params.hotelId;
 
+        const { type, number, price, availablePeriod } = req.body;
+
         // Find the hotel by ID
         const hotel = await Hotel.findById(req.params.hotelId);
         if (!hotel) {
@@ -112,8 +114,21 @@ exports.createRoom= async(req,res,next) => {
             });
         }
 
+        if (type && !['standard','superior','deluxe','suite'].includes(type)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid room type. Allowed values: standard, superior, deluxe, suite.'
+            });
+        }
+
         // Create a new room
-        const room = await Room.create(req.body);
+        const room = new Room({
+            hotel: hotel._id,
+            type,
+            number,
+            price,
+            availablePeriod
+        })
 
         res.status(201).json({
             success: true,
@@ -131,8 +146,8 @@ exports.createRoom= async(req,res,next) => {
 //@route    PUT /api/v1/rooms/:id
 //@access   Private
 exports.updateRoom = async (req, res) => {
-    const roomId = req.params.id; // Room ID to update
-    const { hotel, type, number, price, availablePeriod } = req.body; // Fields to update
+    const roomId = req.params.id;
+    const { hotel, type, number, price, availablePeriod } = req.body;
 
     try {
 
@@ -150,6 +165,8 @@ exports.updateRoom = async (req, res) => {
             { hotel, type, number, price, availablePeriod },
             { new: true, runValidators: true } // return updated room and run schema validations
         );
+
+        console.log(room);
 
         // If no room is found
         if (!room) {
