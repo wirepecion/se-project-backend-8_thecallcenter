@@ -39,8 +39,8 @@ package "Hotel" {
     
     class "<<Representation>>\nBooking" as RepresentationBooking {
         -bookingId
-        -startDate
-        -endDate
+        -checkInDate
+        -checkOutDate
         -Customer customer
         -Room room
     }
