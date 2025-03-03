@@ -1,5 +1,5 @@
 const Booking = require('../models/Booking');
-const Payment = require('../models/Payment'); // Assuming the Payment model is in this path
+const Payment = require('../models/Payment');
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
