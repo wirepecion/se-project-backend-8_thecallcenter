@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
 const Payment = require('../models/Payment');
@@ -330,8 +331,11 @@ exports.updateBooking = async(req,res,next) => {
 //@route    DELETE /api/v1/bookings/:id
 //@access   Private
 exports.deleteBooking = async(req,res,next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-        const booking = await Booking.findById(req.params.id);
+        const booking = await Booking.findById(req.params.id).session(session);
 
         if (!booking) {
             return res.status(404).json({
@@ -357,10 +361,10 @@ exports.deleteBooking = async(req,res,next) => {
         }
 
         // Delete all associated payments
-        await Payment.deleteMany({booking:req.params.id});
+        await Payment.deleteMany({booking:req.params.id}).session(session);
 
         // Update room's unavailablePeriod
-        const room = await Room.findById(booking.room);
+        const room = await Room.findById(booking.room).session(session);
 
         const checkInDate = new Date(booking.checkInDate).getTime();
         const checkOutDate = new Date(booking.checkOutDate).getTime();
@@ -372,9 +376,11 @@ exports.deleteBooking = async(req,res,next) => {
         });
 
         // Save the updated room document
-        await room.save();
+        await room.save({ session });
 
-        await booking.deleteOne();
+        await booking.deleteOne({ session });
+
+        await session.commitTransaction();
 
         res.status(200).json({
             success:true, 
@@ -382,11 +388,14 @@ exports.deleteBooking = async(req,res,next) => {
         });
 
     } catch (error) {
+        await session.abortTransaction();
         console.log(error);
         res.status(500).json({
             success:false,
             message: "Cannot delete Booking"
         });
+    } finally {
+        session.endSession();
     }
 
 };
