@@ -330,7 +330,7 @@ exports.updateBooking = async(req,res,next) => {
 //@desc     Delete booking
 //@route    DELETE /api/v1/bookings/:id
 //@access   Private
-exports.deleteBooking = async(req,res,next) => {
+exports.deleteBooking = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -339,63 +339,65 @@ exports.deleteBooking = async(req,res,next) => {
 
         if (!booking) {
             return res.status(404).json({
-                success:false,
-                message: `No booking with the id of ${req.params.id}`
+                success: false,
+                message: `No booking with the id of ${req.params.id}`,
             });
         }
 
-        //Make sure the user is the booking owner
+        // Make sure the user is the booking owner
         if (booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(401).json({
-                success:false,
-                message: `User ${req.user.id} is not authorized to delete this booking`
+                success: false,
+                message: `User ${req.user.id} is not authorized to delete this booking`,
             });
         }
 
-        //User must delete the booking at least 7 days before the check-in date
+        // User must delete the booking at least 7 days before the check-in date
         if (booking.bookingDate - Date.now() < 7 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
             return res.status(400).json({
-                success:false,
-                message: "The user must cancel the booking at least 7 days before the check-in date"
+                success: false,
+                message: 'The user must cancel the booking at least 7 days before the check-in date',
             });
         }
 
         // Delete all associated payments
-        await Payment.deleteMany({booking:req.params.id}).session(session);
+        await Payment.deleteMany({ booking: req.params.id }).session(session);
 
         // Update room's unavailablePeriod
         const room = await Room.findById(booking.room).session(session);
 
-        const checkInDate = new Date(booking.checkInDate).getTime();
-        const checkOutDate = new Date(booking.checkOutDate).getTime();
+        const checkInDate = new Date(booking.checkInDate).toISOString
+        const checkOutDate = new Date(booking.checkOutDate).toISOString
 
-        room.unavailablePeriod = room.unavailablePeriod.filter(period => {
-            // Remove the period from unavailablePeriod array if it matches the booking's dates
-            return !(new Date(period.startDate).getTime() === checkInDate && 
-                    new Date(period.endDate).getTime() === checkOutDate);
+        // Remove the period from unavailablePeriod array if it matches the booking's dates
+        room.unavailablePeriod = room.unavailablePeriod.filter((period) => {
+            return !(
+                new Date(period.startDate).toISOString === checkInDate &&
+                new Date(period.endDate).toISOString === checkOutDate
+            );
         });
 
         // Save the updated room document
-        await room.save({ session });
+        const savedRoom = await room.save({ session });
 
+        // Delete the booking
         await booking.deleteOne({ session });
 
+        // Commit the transaction
         await session.commitTransaction();
 
         res.status(200).json({
-            success:true, 
-            data:{}
+            success: true,
+            data: {},
         });
-
     } catch (error) {
         await session.abortTransaction();
         console.log(error);
         res.status(500).json({
-            success:false,
-            message: "Cannot delete Booking"
+            success: false,
+            message: 'Cannot delete Booking',
         });
     } finally {
         session.endSession();
     }
-
 };
