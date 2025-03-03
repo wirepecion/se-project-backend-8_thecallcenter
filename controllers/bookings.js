@@ -374,9 +374,6 @@ exports.deleteBooking = async(req,res,next) => {
         // Save the updated room document
         await room.save();
 
-    
-        await room.save();
-
         await booking.deleteOne();
 
         res.status(200).json({
