@@ -355,18 +355,23 @@ exports.deleteBooking = async(req,res,next) => {
                 message: "The user must cancel the booking at least 7 days before the check-in date"
             });
         }
-    
-        // Update room's unavailblePeriod
+
+        // Delete all associated payments
+        await Payment.deleteMany({booking:req.params.id});
+
+        // Update room's unavailablePeriod
         const room = await Room.findById(booking.room);
 
-        const checkInDate = new Date(booking.checkInDate);
-        const checkOutDate = new Date(booking.checkOutDate);
+        const checkInDate = new Date(booking.checkInDate).getTime();
+        const checkOutDate = new Date(booking.checkOutDate).getTime();
 
         room.unavailablePeriod = room.unavailablePeriod.filter(period => {
-        // Remove the period from unavailablePeriod array if it matches the booking's dates
-            return checkInDate == new Date(period.startDate) && checkOutDate == new Date(period.endDate);
+            // Remove the period from unavailablePeriod array if it matches the booking's dates
+            return !(new Date(period.startDate).getTime() === checkInDate && 
+                    new Date(period.endDate).getTime() === checkOutDate);
         });
-    
+
+        // Save the updated room document
         await room.save();
 
         await booking.deleteOne();
