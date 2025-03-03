@@ -141,10 +141,10 @@ exports.updatePayment = async (req, res) => {
             });
         }
 
-        if (status && !['pending', 'completed', 'failed'].includes(status)) {
+        if (status && !['unpaid','pending', 'completed', 'failed'].includes(status)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid payment status. Allowed values: pending, completed, failed.'
+                message: 'Invalid payment status. Allowed values: unpaid, pending, completed, failed.'
             });
         }
 
