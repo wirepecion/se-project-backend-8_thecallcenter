@@ -75,6 +75,7 @@ exports.getRooms = async(req,res,next) => {
             pagination,
             data:rooms});
     } catch (err) {
+        console.log(err);
         res.status(400).json({success:false});
     }
 };
@@ -84,6 +85,7 @@ exports.getRooms = async(req,res,next) => {
 //@access   Public
 exports.getRoom= async(req,res,next) => {
     try {
+
         const room = await Room.findById(req.params.id).populate({path: 'hotel', select: 'name'});
 
         if (!room) {
@@ -129,6 +131,8 @@ exports.createRoom= async(req,res,next) => {
             price,
             unavailablePeriod
         })
+
+        await room.save();
 
         res.status(201).json({
             success: true,
