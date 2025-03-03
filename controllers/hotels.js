@@ -24,7 +24,7 @@ exports.getHotels = async(req,res,next) => {
         queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
         //Finding resource
-        query = Hotel.find(JSON.parse(queryStr)).populate({path: 'bookings'}).populate({path: 'rooms'});
+        query = Hotel.find(JSON.parse(queryStr)).populate({path: 'bookings', select: 'checkInDate checkOutDate'}).populate({path: 'rooms'});
 
         //Select Fields
         if (req.query.select) {
@@ -84,7 +84,7 @@ exports.getHotels = async(req,res,next) => {
 //@access   Public
 exports.getHotel= async(req,res,next) => {
     try {
-        const hotel = await Hotel.findById(req.params.id).populate({path: 'bookings'}).populate({path: 'rooms'});
+        const hotel = await Hotel.findById(req.params.id).populate({path: 'bookings', select: 'checkInDate checkOutDate'}).populate({path: 'rooms'});
 
         if (!hotel) {
             return res.status(400).json({success:false});
