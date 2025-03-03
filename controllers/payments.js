@@ -60,9 +60,8 @@ exports.getPayment = async (req, res) => {
 exports.createPayment = async (req, res) => {
     try {
         req.body.booking = req.params.bookingId;
-        req.body.user = req.user.id;
 
-        const { amount, method } = req.body;
+        const { user, amount, method, status } = req.body;
 
         const booking = await Booking.findById(req.params.bookingId);
 
@@ -80,13 +79,20 @@ exports.createPayment = async (req, res) => {
             });
         }
 
+        if (status && !['unpaid', 'pending', 'completed', 'failed'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid payment status. Allowed values: unpaid, pending, completed, failed.'
+            });
+        }
+
         // Create a new payment document
         const payment = new Payment({
             booking: booking._id,
-            user: req.body.user,
+            user,
             amount,
             method,
-            status: 'unpaid'
+            status
         });
 
         // Save the payment to the database
