@@ -355,6 +355,19 @@ exports.deleteBooking = async(req,res,next) => {
                 message: "The user must cancel the booking at least 7 days before the check-in date"
             });
         }
+    
+        // Update room's unavailblePeriod
+        const room = await Room.findById(booking.room);
+
+        const checkInDate = new Date(booking.checkInDate);
+        const checkOutDate = new Date(booking.checkOutDate);
+
+        room.unavailablePeriod = room.unavailablePeriod.filter(period => {
+        // Remove the period from unavailablePeriod array if it matches the booking's dates
+            return checkInDate == new Date(period.startDate) && checkOutDate == new Date(period.endDate);
+        });
+    
+        await room.save();
 
         await booking.deleteOne();
 

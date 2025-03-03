@@ -86,7 +86,7 @@ exports.createPayment = async (req, res) => {
             user: req.body.user,
             amount,
             method,
-            status: 'pending'
+            status: 'unpaid'
         });
 
         // Save the payment to the database
@@ -107,7 +107,7 @@ exports.createPayment = async (req, res) => {
 
 // @desc    Update payment details
 // @route   PUT /api/v1/payments/:id
-// @access  Private
+// @access  Public
 exports.updatePayment = async (req, res) => {
     try {
         const { amount, method, status } = req.body;
@@ -116,6 +116,13 @@ exports.updatePayment = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid payment method. Allowed values: credit card, debit card, bank transfer.'
+            });
+        }
+
+        if (status && status !== 'pending' && req.user.role !== 'admin') {
+            return res.status(400).json({
+                success: false,
+                message: `User is allowed to update the payment to 'pending' status only.`
             });
         }
 

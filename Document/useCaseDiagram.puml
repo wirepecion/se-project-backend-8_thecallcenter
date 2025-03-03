@@ -7,6 +7,7 @@ actor "Registered User" as registeredUser
 actor "Admin" as admin
 
 rectangle "Hotel Booking System" {
+  top to bottom direction
   usecase "Register" as register
   usecase "Login" as login
   usecase "View Hotels" as view
@@ -15,14 +16,18 @@ rectangle "Hotel Booking System" {
   usecase "Logout" as logout
 }
 
+left to right direction
+
 unregisteredUser -- register
 unregisteredUser -- login
 unregisteredUser -- view
 
+registeredUser -- login
 registeredUser -- view
 registeredUser -- logout
 registeredUser -- manageBooking
 
+login -- admin
 logout -- admin
 view -- admin
 manageBooking -- admin

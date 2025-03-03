@@ -1,4 +1,4 @@
-@startuml
+@startuml HotelBooking Class Diagram
 left to right direction
 package "Hotel" {
     class "<<Application>>\nHotelService" as HotelService {}
