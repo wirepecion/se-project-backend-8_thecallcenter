@@ -129,7 +129,6 @@ exports.createRoom= async(req,res,next) => {
             price,
             unavailablePeriod
         })
-        await room.save();
 
         res.status(201).json({
             success: true,
@@ -148,7 +147,7 @@ exports.createRoom= async(req,res,next) => {
 //@access   Private
 exports.updateRoom = async (req, res) => {
     const roomId = req.params.id;
-    const { hotel, type, number, price, availablePeriod } = req.body;
+    const { hotel, type, number, price, unavailablePeriod } = req.body;
 
     try {
 
@@ -163,7 +162,7 @@ exports.updateRoom = async (req, res) => {
         // Find the room by ID and update it
         const room = await Room.findByIdAndUpdate(
             roomId,
-            { hotel, type, number, price, availablePeriod },
+            { hotel, type, number, price, unavailablePeriod },
             { new: true, runValidators: true } // return updated room and run schema validations
         );
 
@@ -195,22 +194,40 @@ exports.updateRoom = async (req, res) => {
 //@desc     Delete single room
 //@route    DELETE /api/v1/rooms/:id
 //@access   Private
-exports.deleteRoom= async(req,res,next) => {
+exports.deleteRoom = async (req, res, next) => {
     try {
         const room = await Room.findById(req.params.id);
 
         if (!room) {
-            return res.status(400).json({
-                success:false,
+            return res.status(404).json({
+                success: false,
                 message: `Room not found with id of ${req.params.id}`
             });
         }
 
-        await Booking.deleteMany({room:req.params.id});
-        await Room.deleteOne({_id:req.params.id});
+        // Count rooms in the hotel
+        const roomCount = await Room.countDocuments({ hotel: room.hotel });
 
-        res.status(200).json({success:true, data:{}});
+        // Prevent deletion if only one room is left
+        if (roomCount <= 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete the only room in the hotel"
+            });
+        }
+
+        // Delete all bookings related to this room
+        await Booking.deleteMany({ room: req.params.id });
+
+        // Delete the room
+        await Room.deleteOne({ _id: req.params.id });
+
+        res.status(200).json({ success: true, data: {} });
     } catch (err) {
-        res.status(400).json({success:false});
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: "Server error: Cannot delete room"
+        });
     }
 };
