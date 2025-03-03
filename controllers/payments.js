@@ -5,8 +5,17 @@ const Payment = require('../models/Payment');
 // @route   GET /api/v1/payments
 // @access  Private
 exports.getPayments = async (req, res) => {
+    let query;
+        
+    //General users can see only their bookings!
+    if (req.user.role !== 'admin') {
+        query = Payment.find({user:req.user.id});
+    } else {
+        query = Payment.find({});
+    }
+
     try {
-        const payments = await Payment.find();
+        const payments = await query;
 
         res.status(200).json({
             success: true,

@@ -5,11 +5,11 @@ const { protect, authorize } = require('../middleware/auth');
 const router = express.Router({mergeParams:true});
 
 router.route('/')
-    .get(protect, authorize('admin'), getPayments)
+    .get(protect, authorize('admin','user'), getPayments)
     .post(protect, authorize('admin'), createPayment);
 
 router.route('/:id')
-    .get(protect, getPayment)
+    .get(protect, authorize('admin','user'), getPayment)
     .put(protect, authorize('admin','user'), updatePayment)
     .delete(protect, authorize('admin'), deletePayment);
 
