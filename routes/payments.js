@@ -6,11 +6,11 @@ const router = express.Router({mergeParams:true});
 
 router.route('/')
     .get(protect, authorize('admin'), getPayments)
-    .post(protect, authorize('admin','user'), createPayment);
+    .post(protect, authorize('admin'), createPayment);
 
 router.route('/:id')
     .get(protect, getPayment)
-    .put(protect, authorize('admin'), updatePayment)
+    .put(protect, authorize('admin','user'), updatePayment)
     .delete(protect, authorize('admin'), deletePayment);
 
 router.route('/:id/cancel')
