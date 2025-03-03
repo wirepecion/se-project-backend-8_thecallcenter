@@ -359,7 +359,7 @@ exports.deleteBooking = async(req,res,next) => {
         // Delete all associated payments
         await Payment.deleteMany({booking:req.params.id});
 
-     // Update room's unavailablePeriod
+        // Update room's unavailablePeriod
         const room = await Room.findById(booking.room);
 
         const checkInDate = new Date(booking.checkInDate).getTime();
