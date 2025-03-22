@@ -40,6 +40,9 @@ module.exports = router;
  *         tel:
  *           type: string
  *           description: Telephone number
+ *         picture:
+ *           type: string
+ *           description: hotel picture
  *       example:
  *         id: 609bda561452242d88d36e37
  *         name: Happy Hotel

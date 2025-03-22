@@ -101,7 +101,7 @@ exports.getHotel= async(req,res,next) => {
 //@access   Private
 exports.createHotel= async(req,res,next) => {
     try {
-        const { name, address, rooms } = req.body;
+        const { name, address, tel, rooms, picture } = req.body;
 
         // Check if at least one room is provided
         if (!rooms || !Array.isArray(rooms) || rooms.length === 0) {
@@ -112,7 +112,7 @@ exports.createHotel= async(req,res,next) => {
         }
 
         // Create the hotel
-        const hotel = await Hotel.create({ name, address });
+        const hotel = await Hotel.create({ name, address, tel, picture})
 
         // Add hotel reference to each room and create rooms
         const createdRooms = await Room.insertMany(
