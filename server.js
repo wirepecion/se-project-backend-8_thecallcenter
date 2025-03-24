@@ -66,7 +66,7 @@ app.use(hpp());
 app.use(cors());
 
 // Cookie parser
-app.use(cookieACParser());
+app.use(cookieParser());
 
 app.use('/api-docs',swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
