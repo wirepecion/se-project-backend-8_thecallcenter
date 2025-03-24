@@ -15,6 +15,10 @@ exports.getBookings= async(req,res,next) => {
     if (req.user.role !== 'admin') {
         query = Booking.find({user:req.user.id})
             .populate({
+                path:'room',
+                select: 'number type price'
+            })
+            .populate({
                 path:'hotel',
                 select: 'name address tel'
             })
@@ -29,6 +33,10 @@ exports.getBookings= async(req,res,next) => {
 
             query = Booking.find({hotel:req.params.hotelId})
                 .populate({
+                    path:'room',
+                    select: 'number type price'
+                })
+                .populate({
                     path:'hotel',
                     select: 'name address tel'
                 })
@@ -40,6 +48,10 @@ exports.getBookings= async(req,res,next) => {
         } else {
 
             query = Booking.find()
+                .populate({
+                    path:'room',
+                    select: 'number type price'
+                })
                 .populate({
                     path:'hotel',
                     select: 'name address tel'
@@ -75,6 +87,10 @@ exports.getBookings= async(req,res,next) => {
 exports.getBooking= async(req,res,next) => {
     try {
         const booking = await Booking.findById(req.params.id)
+        .populate({
+            path:'room',
+            select: 'number type price'
+        })
         .populate({
             path:'hotel',
             select: 'name address tel'
@@ -173,7 +189,7 @@ exports.addBooking = async (req, res, next) => {
         if (isUnavailable) {
             return res.status(400).json({
                 success: false,
-                message: 'Room not available for booking.',
+                message: 'Room is not available for booking.',
             });
         }
 
