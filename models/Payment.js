@@ -17,7 +17,7 @@ const PaymentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['unpaid', 'pending', 'completed', 'canceled'],
+        enum: ['unpaid', 'pending', 'completed', 'failed', 'canceled'],
         default: 'unpaid',
         required: true
     },
