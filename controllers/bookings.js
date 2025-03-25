@@ -328,6 +328,34 @@ exports.updateBooking = async(req,res,next) => {
             runValidators:true
         });
 
+        // Step 1: Find the associated Room
+        const room = await Room.findById(booking.room);
+
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                message: 'Room not found for this booking.',
+            });
+        }
+
+        // Step 2: Remove the previous unavailable period for the booking
+        const oldUnavailablePeriodIndex = room.unavailablePeriod.findIndex((period) =>
+            period.startDate <= booking.checkOutDate && period.endDate >= booking.checkInDate
+        );
+
+        if (oldUnavailablePeriodIndex > -1) {
+            room.unavailablePeriod.splice(oldUnavailablePeriodIndex, 1);
+        }
+
+        // Step 3: Add the new unavailable period
+        room.unavailablePeriod.push({
+            startDate: new Date(booking.checkInDate),
+            endDate: new Date(booking.checkOutDate),
+        });
+
+        // Step 4: Save the room with the updated unavailablePeriod
+        await room.save();
+
         res.status(200).json({
             success:true, 
             data:booking
