@@ -11,7 +11,7 @@ router.route('/')
 router.route('/:id')
     .get(protect, authorize('admin','user'), getPayment)
     .put(protect, authorize('admin','user'), updatePayment)
-    .delete(protect, authorize('admin'), deletePayment);
+    .delete(protect, authorize('admin','user'), deletePayment);
 
 router.route('/:id/cancel')
     .put(protect, authorize('admin','user'), cancelPayment);
