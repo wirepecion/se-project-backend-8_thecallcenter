@@ -134,10 +134,10 @@ exports.updatePayment = async (req, res) => {
             });
         }
 
-        if (status && status !== 'pending' && req.user.role !== 'admin') {
+        if (status && !['pending', 'unpaid'].includes(status) && req.user.role !== 'admin') {
             return res.status(400).json({
                 success: false,
-                message: `User is allowed to update the payment to 'pending' status only.`
+                message: `User is allowed to update the payment to 'pending' or 'unpaid' status only.`
             });
         }
 
