@@ -81,10 +81,10 @@ exports.createPayment = async (req, res) => {
             });
         }
 
-        if (method && !['credit card', 'debit card', 'bank transfer'].includes(method)) {
+        if (method && !['Credit Card', 'Debit Card', 'Bank Transfer','ThaiQR'].includes(method)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid payment method. Allowed values: credit card, debit card, bank transfer.'
+                message: 'Invalid payment method. Allowed values: Credit Card, Debit Card, Bank Transfer, ThaiQR.'
             });
         }
 
@@ -127,10 +127,17 @@ exports.updatePayment = async (req, res) => {
     try {
         const { amount, method, status } = req.body;
 
-        if (method && !['credit card', 'debit card', 'bank transfer'].includes(method)) {
+        if (method && !['Credit Card', 'Debit Card', 'Bank Transfer','ThaiQR'].includes(method)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid payment method. Allowed values: credit card, debit card, bank transfer.'
+                message: 'Invalid payment method. Allowed values: Credit Card, Debit Card, Bank Transfer, ThaiQR.'
+            });
+        }
+
+        if (status && !['unpaid', 'pending', 'completed', 'failed'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid payment status. Allowed values: unpaid, pending, completed, failed.'
             });
         }
 
@@ -141,12 +148,6 @@ exports.updatePayment = async (req, res) => {
             });
         }
 
-        if (status && !['unpaid', 'pending', 'completed', 'failed'].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid payment status. Allowed values: unpaid, pending, completed, failed.'
-            });
-        }
 
         const payment = await Payment.findByIdAndUpdate(
             req.params.id,
