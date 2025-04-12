@@ -2,16 +2,6 @@ const mongoose = require('mongoose');
 
 const BookingSchema = new mongoose.Schema({
 
-    checkInDate: {
-        type: Date,
-        required: true
-    },
-
-    checkOutDate: {
-        type: Date,
-        required: true
-    },
-
     user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
@@ -30,11 +20,34 @@ const BookingSchema = new mongoose.Schema({
         required: true
     },
 
+    checkInDate: {
+        type: Date,
+        required: true
+    },
+
+    checkOutDate: {
+        type: Date,
+        required: true
+    },
+
+    status: {
+        type: String,
+        enum: ['pending', 'confirmed', 'canceled', 'checkedIn', 'completed'],
+        default: 'pending'
+    },
+
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
 
+});
+
+BookingSchema.virtual('payments',{
+    ref:'Payment',
+    localField:'_id',
+    foreignField:'booking',
+    justOne:false
 });
 
 module.exports = mongoose.model('Booking', BookingSchema);

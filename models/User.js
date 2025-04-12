@@ -7,6 +7,7 @@ const UserSchema=new mongoose.Schema({
         type:String,
         required:[true,'Please add a name']
     },
+
     tel:{
         type: String,
         required:[true,'Please add a telephone number'],
@@ -15,6 +16,7 @@ const UserSchema=new mongoose.Schema({
             'Telephone number must have 10 digits'
         ]
     },
+
     email:{
         type: String,
         required:[true,'Please add an email'],
@@ -24,23 +26,34 @@ const UserSchema=new mongoose.Schema({
             'Please add a valid email'
         ]
     },
+
     role: {
         type:String,
-        enum: ['user','admin'],
+        enum: ['user','admin','hotelManager'],
         default: 'user'
     },
+
     password: {
         type:String,
         required:[true,'Please add a password'],
         minlength: 6,
         select: false
     },
+
     credit:{
         type: Number,
         default: 0
     },
+
+    responsibleHotel:{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Hotel'
+    },
+
     resetPasswordToken: String,
+
     resetPasswordExpire: Date,
+    
     createdAt:{
         type: Date,
         default:Date.now

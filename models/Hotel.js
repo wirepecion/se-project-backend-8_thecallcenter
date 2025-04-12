@@ -8,13 +8,16 @@ const HotelSchema = new mongoose.Schema({
         trim:true,
         maxlength:[50,'Name can not be more than 50 characters']
     },
+
     address:{
         type: String,
         required: [true, 'Please add an address']
     },
+
     tel:{
         type: String
     },
+    
     picture:{
         type: String
     }
