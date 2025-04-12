@@ -190,6 +190,7 @@ exports.cancelPayment = async (req, res) => {
             });
         }
 
+        // check if the user is the owner of this payment
         if (payment.user.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(401).json({
                 success:false,
@@ -197,11 +198,11 @@ exports.cancelPayment = async (req, res) => {
             });
         }
 
-        // Check if the payment status is 'pending' before allowing cancellation
-        if (payment.status !== 'pending' && req.user.role !== 'admin') {
+        // Check if the payment status is 'booked' or 'checkedIn' before allowing cancellation
+        if (!['booked', 'checkedIn'].includes(payment.status) && req.user.role !== 'admin') {
             return res.status(400).json({
                 success: false,
-                message: 'Payment can only be canceled if it is in pending status',
+                message: 'Payment can only be canceled if it is in booked or checkedIn status',
             });
         }
 
