@@ -23,7 +23,7 @@ const PaymentSchema = new mongoose.Schema({
     },
     method: {
         type: String,
-        enum: ['credit card', 'debit card', 'bank transfer'],
+        enum: ['Credit Card', 'Debit Card', 'Bank Transfer','ThaiQR'],
         required: true
     },
     paymentDate: {
