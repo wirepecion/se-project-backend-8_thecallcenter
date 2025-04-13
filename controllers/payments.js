@@ -140,14 +140,14 @@ exports.updatePayment = async (req, res) => {
         const { amount, method, status } = req.body;
         const user = req.user;
         
-        if (status !== undefined && (amount !== undefined || method !== undefined)) {
+        /*if (status !== undefined && (amount !== undefined || method !== undefined)) {
             console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${amount ? 'amount' : ''}${amount && method ? ' and ' : ''}${method ? 'method' : ''}' in the same request. Not allowed. Payment ID: ${payment.id}`);
 
             return res.status(400).json({
               error: "InvalidRequest",
               message: "Cannot update 'status' together with 'amount' or 'method' in the same request."
             });
-        }
+        }*/
 
         if (status && status === 'unpaid') {
             if(user.role !== 'admin') {
@@ -208,7 +208,7 @@ exports.updatePayment = async (req, res) => {
             });
         }
 
-        if (!status){
+        //if (!status){
             
             if (method && !['Card', 'Bank', 'ThaiQR'].includes(method)) {
                 console.warn(`[VALIDATION] User '${user.id}' attempted to set invalid payment method '${method}'. Payment ID: ${payment.id}`);
@@ -221,7 +221,7 @@ exports.updatePayment = async (req, res) => {
 
             payment.amount = amount || payment.amount;
             payment.method = method || payment.method;    
-        }
+        //}
 
         await payment.save(); 
 
