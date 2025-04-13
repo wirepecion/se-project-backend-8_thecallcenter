@@ -4,7 +4,7 @@ const Hotel = require('../models/Hotel');
 const Payment = require('../models/Payment');
 const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
-const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
+const { refundCalculation } = require('../utils/refundCalculation');
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -239,8 +239,6 @@ exports.addBooking = async (req, res, next) => {
         });
         await payment.save(); // Save payment
 
-        schedulePaymentTimeout(payment._id); 
-
         // Respond with the success response
         res.status(201).json({
             success: true,
@@ -313,8 +311,10 @@ exports.updateBooking = async(req,res,next) => {
             
             //TODO US2-3 - BE - Create: update booking status on cancellation
 
+            let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), booking.room.price); 
+            
             //TODO US2-3 - BE - Create: process refund payment and store result
-
+            
             //TODO US2-3 - BE - Create: log refund attempt and outcome
 
             //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
