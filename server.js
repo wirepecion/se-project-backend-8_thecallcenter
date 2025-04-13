@@ -54,12 +54,15 @@ app.use(mongoSanitize());
 app.use(helmet());
 app.use(xss());
 app.use(limiter);
+
+// app.use("/api", require("./routes/email"))
 app.use('/api/v1/hotels',hotels);
 app.use('/api/v1/bookings',bookings);
 app.use('/api/v1/reviews',reviews);
 app.use('/api/v1/rooms',rooms);
 app.use('/api/v1/payments',payments);
 app.use('/api/v1/auth',auth);
+
 
 //Prevent http param pollution
 app.use(hpp());

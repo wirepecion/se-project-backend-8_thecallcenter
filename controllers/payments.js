@@ -1,6 +1,9 @@
+const User = require('../models/User');
+const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
+const sendEmail = require("../utils/sendEmails");
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
@@ -185,6 +188,45 @@ exports.updatePayment = async (req, res) => {
                 //TO DO (US2-5) : BE - Create: send notification to hotel manager when admin updates a payment
 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
+                
+                const booking = await Booking.findById(payment.booking)
+                const hotel = await Hotel.findById(booking.hotel)
+                const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+                const customer = await User.findById(payment.user)
+                            
+                await sendEmail({
+                    to: "rirhcceez@gmail.com", // Replace with hotelManager.email when ready
+                    subject: "🔔 Payment Status Updated by Admin",
+                    message: `
+                        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                            <h2 style="color: #2c3e50;">📄 Payment Status Update</h2>
+                
+                            <p><strong>Customer Name:</strong> ${customer.name}</p>
+                            <p><strong>Booking ID:</strong> ${payment.booking}</p>
+                
+                            <p>
+                                <strong>Previous Status:</strong>
+                                <span style="color: #e74c3c;">${payment.status}</span>
+                            </p>
+                            <p>
+                                <strong>Current Status:</strong>
+                                <span style="color: #27ae60;">${status}</span>
+                            </p>
+                
+                            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;" />
+                
+                            <p>
+                                This update was made by <strong>Admin ID:</strong> ${user.id}
+                            </p>
+                            <p>
+                                If you have any questions, please contact our support team at <a href="tel:1112">1112</a>.
+                            </p>
+                
+                            <p style="margin-top: 30px;">Thank you,<br>The TCC Hotel Booking Team</p>
+                        </div>
+                    `,
+                });
+                
             }
             
             payment.status = status; // both admin and manager run here
