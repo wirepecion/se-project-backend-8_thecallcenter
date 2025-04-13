@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
+const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
@@ -107,6 +108,8 @@ exports.createPayment = async (req, res) => {
         // Save the payment to the database
         await payment.save();
 
+        schedulePaymentTimeout(payment._id); 
+        
         res.status(201).json({
             success: true,
             message: 'Payment created successfully',
