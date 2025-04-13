@@ -17,7 +17,7 @@ exports.getBookings= async(req,res,next) => {
         query = Booking.find({user:req.user.id})
             .populate({
                 path: 'payments',
-                select: 'amount method status createdAt' // select fields you want from Payment
+                select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
             })
             .populate({
                 path:'room',
@@ -39,7 +39,7 @@ exports.getBookings= async(req,res,next) => {
             query = Booking.find({hotel:req.params.hotelId})
                 .populate({
                     path: 'payments',
-                    select: 'amount method status createdAt' // select fields you want from Payment
+                    select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
                 })
                 .populate({
                     path:'room',
@@ -59,7 +59,7 @@ exports.getBookings= async(req,res,next) => {
             query = Booking.find()
                 .populate({
                     path: 'payments',
-                    select: 'amount method status' // select fields you want from Payment
+                    select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
                 })
                 .populate({
                     path:'room',
@@ -102,7 +102,7 @@ exports.getBooking= async(req,res,next) => {
         const booking = await Booking.findById(req.params.id)
         .populate({
             path: 'payments',
-            select: 'amount method status createdAt' // select fields you want from Payment
+            select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
         })
         .populate({
             path:'room',
