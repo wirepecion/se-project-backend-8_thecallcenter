@@ -9,6 +9,7 @@ const hpp = require('hpp');
 const cors = require('cors');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
+const nodemailer = require('nodemailer')
 
 // Load env vars
 dotenv.config({path: './config/config.env'});

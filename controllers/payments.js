@@ -1,7 +1,7 @@
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
-
+const { sendEmail } = require('../utils/sendmail')
 // @desc    Get all payments
 // @route   GET /api/v1/payments
 // @access  Private
@@ -140,14 +140,14 @@ exports.updatePayment = async (req, res) => {
         const { amount, method, status } = req.body;
         const user = req.user;
         
-        /*if (status !== undefined && (amount !== undefined || method !== undefined)) {
+        if (status !== undefined && (amount !== undefined || method !== undefined)) {
             console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${amount ? 'amount' : ''}${amount && method ? ' and ' : ''}${method ? 'method' : ''}' in the same request. Not allowed. Payment ID: ${payment.id}`);
 
             return res.status(400).json({
               error: "InvalidRequest",
               message: "Cannot update 'status' together with 'amount' or 'method' in the same request."
             });
-        }*/
+        }
 
         if (status && status === 'unpaid') {
             if(user.role !== 'admin') {
@@ -169,6 +169,16 @@ exports.updatePayment = async (req, res) => {
             //TO DO (US2-1) : BE - Create: implement logging for payment activity
 
             //TO DO (US2-1) : BE - Create: confirmation email
+
+            sendEmail({
+                from: process.env.SMPT_MAIL,
+                to: user.email,
+                subject: "[No-reply] New Payment",
+                html: `
+                <h2>ถึงคุณ ${user.name} </h2>
+                <h3>ขอบคุณสำหรับการชำระเงิน BOOKID : ${payment.booking}</h3>
+                <p>ระบบได้รับการชำระเงินขอท่านเรียบร้อยแล้ว กรุณารอระบบตรวจสอบเพื่อทำการยืนยันการชำระเงินนี้</p>`,
+            });
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
@@ -208,7 +218,7 @@ exports.updatePayment = async (req, res) => {
             });
         }
 
-        //if (!status){
+        if (!status){
             
             if (method && !['Card', 'Bank', 'ThaiQR'].includes(method)) {
                 console.warn(`[VALIDATION] User '${user.id}' attempted to set invalid payment method '${method}'. Payment ID: ${payment.id}`);
@@ -221,7 +231,7 @@ exports.updatePayment = async (req, res) => {
 
             payment.amount = amount || payment.amount;
             payment.method = method || payment.method;    
-        //}
+        }
 
         await payment.save(); 
 
