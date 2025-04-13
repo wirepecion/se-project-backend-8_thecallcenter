@@ -4,6 +4,7 @@ const Hotel = require('../models/Hotel');
 const Payment = require('../models/Payment');
 const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
+const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -237,6 +238,8 @@ exports.addBooking = async (req, res, next) => {
             method: paymentMethod,
         });
         await payment.save(); // Save payment
+
+        schedulePaymentTimeout(payment._id); 
 
         // Respond with the success response
         res.status(201).json({
