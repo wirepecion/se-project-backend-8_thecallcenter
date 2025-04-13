@@ -81,14 +81,14 @@ exports.createPayment = async (req, res) => {
             });
         }
 
-        if (method && !['Credit Card', 'Debit Card', 'Bank Transfer','ThaiQR'].includes(method)) {
+        if (method && !['Card', 'Bank', 'ThaiQR'].includes(method)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid payment method. Allowed values: Credit Card, Debit Card, Bank Transfer, ThaiQR.'
+                message: 'Invalid payment method. Allowed values: Card, Bank, ThaiQR.'
             });
         }
 
-        if (status && !['unpaid', 'pending', 'completed', 'failed'].includes(status)) {
+        if (status && !['unpaid', 'pending', 'completed', 'failed', 'canceled'].includes(status)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid payment status. Allowed values: unpaid, pending, completed, failed.'
@@ -127,14 +127,14 @@ exports.updatePayment = async (req, res) => {
     try {
         const { amount, method, status } = req.body;
 
-        if (method && !['Credit Card', 'Debit Card', 'Bank Transfer','ThaiQR'].includes(method)) {
+        if (method && !['Card', 'Bank', 'ThaiQR'].includes(method)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid payment method. Allowed values: Credit Card, Debit Card, Bank Transfer, ThaiQR.'
+                message: 'Invalid payment method. Allowed values: Card, Bank, ThaiQR.'
             });
         }
 
-        if (status && !['unpaid', 'pending', 'completed', 'failed'].includes(status)) {
+        if (status && !['unpaid', 'pending', 'completed', 'failed', 'canceled'].includes(status)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid payment status. Allowed values: unpaid, pending, completed, failed.'
