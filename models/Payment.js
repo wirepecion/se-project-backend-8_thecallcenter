@@ -28,7 +28,7 @@ const PaymentSchema = new mongoose.Schema({
     method: {
         type: String,
         enum: ['Card', 'Bank', 'ThaiQR'],
-        required: true
+        
     },
 
     paymentDate: {
