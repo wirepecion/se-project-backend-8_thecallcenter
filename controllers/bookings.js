@@ -13,7 +13,7 @@ exports.getBookings= async(req,res,next) => {
     let query;
     
     //General users can see only their bookings!
-    if (req.user.role !== 'admin') {
+    if (req.user.role === 'user') {
         query = Booking.find({user:req.user.id})
             .populate({
                 path: 'payments',
@@ -31,6 +31,25 @@ exports.getBookings= async(req,res,next) => {
                 path:'user',
                 select:'name'
             });
+    } else if (req.user.role === 'hotelManager') {
+        query = Booking.find({hotel:req.user.responsibleHotel})
+            .populate({
+                path: 'payments',
+                select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
+            })
+            .populate({
+                path:'room',
+                select: 'number type price'
+            })
+            .populate({
+                path:'hotel',
+                select: 'name address tel'
+            })
+            .populate({
+                path:'user',
+                select:'name'
+            });
+    
     } else { //If you are an admin, you can see all!
         if (req.params.hotelId) {
 
