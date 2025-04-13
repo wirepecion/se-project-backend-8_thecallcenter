@@ -5,6 +5,8 @@ const Payment = require('../models/Payment');
 const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
 
+//อ่านจริงป่าว
+
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
 //@access   Public
