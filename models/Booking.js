@@ -50,4 +50,5 @@ BookingSchema.virtual('payments',{
     justOne:false
 });
 
+BookingSchema.set('toJSON', { virtuals: true });
 module.exports = mongoose.model('Booking', BookingSchema);

@@ -5,15 +5,15 @@ const { protect, authorize } = require('../middleware/auth');
 const router = express.Router({mergeParams:true});
 
 router.route('/')
-    .get(protect, authorize('admin','user'), getPayments)
-    .post(protect, authorize('admin', 'user'), createPayment);
+    .get(protect, authorize('admin','user','hotelManager'), getPayments)
+    .post(protect, authorize('admin','user'), createPayment);
 
 router.route('/:id')
-    .get(protect, authorize('admin','user'), getPayment)
-    .put(protect, authorize('admin','user'), updatePayment)
-    .delete(protect, authorize('admin','user'), deletePayment);
+    .get(protect, authorize('admin','user','hotelManager'), getPayment)
+    .put(protect, authorize('admin','user','hotelManager'), updatePayment)
+    .delete(protect, authorize('admin','user',), deletePayment);
 
 router.route('/:id/cancel')
-    .put(protect, authorize('admin','user'), cancelPayment);
+    .put(protect, authorize('admin','user','hotelManager'), cancelPayment);
 
 module.exports = router;

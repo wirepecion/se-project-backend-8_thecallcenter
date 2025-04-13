@@ -10,8 +10,8 @@ const router = express.Router({mergeParams:true});
 //Re-route into other resource routers
 router.use('/:roomId/bookings', bookingsRouter);
 
-router.route('/').get(getRooms).post(protect, authorize('admin'), createRoom);
-router.route('/:id').get(getRoom).put(protect, authorize('admin'), updateRoom).delete(protect, authorize('admin'), deleteRoom);
+router.route('/').get(getRooms).post(protect, authorize('admin','hotelManager'), createRoom);
+router.route('/:id').get(getRoom).put(protect, authorize('admin','hotelManager'), updateRoom).delete(protect, authorize('admin','hotelManager'), deleteRoom);
 
 module.exports = router;
 
