@@ -15,6 +15,10 @@ exports.getBookings= async(req,res,next) => {
     if (req.user.role !== 'admin') {
         query = Booking.find({user:req.user.id})
             .populate({
+                path: 'payments',
+                select: 'amount method status createdAt' // select fields you want from Payment
+            })
+            .populate({
                 path:'room',
                 select: 'number type price'
             })
@@ -33,6 +37,10 @@ exports.getBookings= async(req,res,next) => {
 
             query = Booking.find({hotel:req.params.hotelId})
                 .populate({
+                    path: 'payments',
+                    select: 'amount method status createdAt' // select fields you want from Payment
+                })
+                .populate({
                     path:'room',
                     select: 'number type price'
                 })
@@ -48,6 +56,10 @@ exports.getBookings= async(req,res,next) => {
         } else {
 
             query = Booking.find()
+                .populate({
+                    path: 'payments',
+                    select: 'amount method status' // select fields you want from Payment
+                })
                 .populate({
                     path:'room',
                     select: 'number type price'
@@ -87,6 +99,10 @@ exports.getBookings= async(req,res,next) => {
 exports.getBooking= async(req,res,next) => {
     try {
         const booking = await Booking.findById(req.params.id)
+        .populate({
+            path: 'payments',
+            select: 'amount method status createdAt' // select fields you want from Payment
+        })
         .populate({
             path:'room',
             select: 'number type price'
