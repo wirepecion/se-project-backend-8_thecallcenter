@@ -1,7 +1,11 @@
+const User = require('../models/User');
+const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
+const { sendTOHotelManager } = require("../utils/sendEmails");
 const { sendNewPayment } = require('../utils/sendmail')
+
 // @desc    Get all payments
 // @route   GET /api/v1/payments
 // @access  Private
@@ -204,6 +208,13 @@ exports.updatePayment = async (req, res) => {
                 //TO DO (US2-5) : BE - Create: send notification to hotel manager when admin updates a payment
 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
+                
+                const booking = await Booking.findById(payment.booking)
+                const hotel = await Hotel.findById(booking.hotel)
+                const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+                const customer = await User.findById(payment.user)
+
+                sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
             
             payment.status = status; // both admin and manager run here
@@ -250,7 +261,8 @@ exports.updatePayment = async (req, res) => {
             data: payment,
         });
     } catch (error) {
-        console.error(error.message);
+        console.error(error.message),
+        console.log(error)
         res.status(500).json({
             success: false,
             message: 'Error occurred while updating payment',

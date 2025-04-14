@@ -4,9 +4,11 @@ const Hotel = require('../models/Hotel');
 const Payment = require('../models/Payment');
 const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
+const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 const { refundCalculation } = require('../utils/refundCalculation');
 const { logCreation } = require('../utils/logCreation');
 const User = require('../models/User');
+
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
 //@access   Public
