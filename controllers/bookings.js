@@ -4,8 +4,9 @@ const Hotel = require('../models/Hotel');
 const Payment = require('../models/Payment');
 const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
-const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
-
+const { refundCalculation } = require('../utils/refundCalculation');
+const { logCreation } = require('../utils/logCreation');
+const User = require('../models/User');
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
 //@access   Public
@@ -239,8 +240,6 @@ exports.addBooking = async (req, res, next) => {
         });
         await payment.save(); // Save payment
 
-        schedulePaymentTimeout(payment._id); 
-
         // Respond with the success response
         const parsedBooking = booking.toObject();
         const parsedPayment = payment.toObject();
@@ -314,21 +313,66 @@ exports.updateBooking = async(req,res,next) => {
                 console.log(`[BOOKING] Admin['${user.id}'] successfully set booking status to 'unpaid'. Booking ID: ${req.params.id}`);
             }
         } else if (status && status === 'canceled') {
-
-            //FOR TEST
-            console.log(`[REFUND] Refund processed successfully for Booking ID: ${req.params.id}. Amount refunded: 2000 THB`);
-
+            try {
             //TODO US2-3 - BE - Create: implement refund logic
+            if(![ 'confirmed', 'checkedIn'].includes(booking.status)){
+                return res.status(400).json({
+                    success: false,
+                    message: 'Booking cannot be canceled at this stage.'
+                });
+            }
+            
+            const payment = await Payment.findOne({
+                booking: req.params.id,
+                status: 'completed'
+            });
+
+            if (!payment) {
+                console.warn(`[PAYMENT] No completed payment found for Booking ID: ${req.params.id}`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'No completed payment found for refund.'
+                });
+            }
+    
+            const paymentPrice = payment.amount;
+
+            let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), paymentPrice); 
             
             //TODO US2-3 - BE - Create: update booking status on cancellation
+            booking.status = status;
+            await booking.save();
+            
+            if (refund > 0) {
+                await User.findByIdAndUpdate(
+                    booking.user,
+                    { $inc: { credit: refund } }
+                );
+            
+                //TODO US2-3 - BE - Create: log refund attempt and outcome
+                console.log(`[REFUND] Refund processed successfully for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`);
+                logCreation( user.id, 'REFUND', `Refund processed for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`,);
+            } else {
+                //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
+                console.warn(`[REFUND] Refund failed for Booking ID: ${req.params.id}. No refundable amount available.`);
 
-            //TODO US2-3 - BE - Create: process refund payment and store result
-
-            //TODO US2-3 - BE - Create: log refund attempt and outcome
-
-            //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
+                return res.status(400).json({
+                    success: false,
+                    message: 'Refund failed. No refundable amount available.'
+                });
+            }
 
             //TODO US2-3 - BE - Create: send email/notification when refund is processed
+
+            } catch (err) {
+                console.error(`[ERROR] Refund process failed for Booking ID: ${req.params.id}.`, err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'An error occurred during the refund process.'
+                });
+            }
+
+            
 
         } else if (status && [ 'confirmed', 'checkedIn', 'completed'].includes(status)){
             if (user.role === 'user') {
