@@ -1,7 +1,7 @@
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
-
+const { sendNewPayment } = require('../utils/sendmail')
 // @desc    Get all payments
 // @route   GET /api/v1/payments
 // @access  Private
@@ -186,6 +186,9 @@ exports.updatePayment = async (req, res) => {
 
             //TO DO (US2-1) : BE - Create: confirmation email
 
+            sendNewPayment(user.email, user.name, payment.booking);
+            console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
+
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
 
@@ -247,6 +250,7 @@ exports.updatePayment = async (req, res) => {
             data: payment,
         });
     } catch (error) {
+        console.error(error.message);
         res.status(500).json({
             success: false,
             message: 'Error occurred while updating payment',
