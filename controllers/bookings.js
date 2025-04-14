@@ -172,12 +172,12 @@ exports.addBooking = async (req, res, next) => {
         }
 
         // Payment method validation
-        if (!paymentMethod) {
-            return res.status(400).json({
-                success: false,
-                message: 'Payment method is required.',
-            });
-        }
+        // if (!paymentMethod) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'Payment method is required.',
+        //     });
+        // }
 
         // Step 2: Fetch room and check availability
         const room = await Room.findById(roomId);
@@ -235,16 +235,25 @@ exports.addBooking = async (req, res, next) => {
             user: userId,
             amount: room.price,
             status: 'unpaid',
-            method: paymentMethod,
+            
         });
         await payment.save(); // Save payment
 
         // Respond with the success response
+        const parsedBooking = booking.toObject();
+        const parsedPayment = payment.toObject();
+        
         res.status(201).json({
             success: true,
             message: 'Booking successfully created',
-            data: booking,
+            data: {
+                booking: parsedBooking,
+                payment: parsedPayment,
+            },
         });
+
+
+
     } catch (error) {
         console.error('Transaction failed:', error);
         res.status(500).json({

@@ -16,7 +16,14 @@ exports.getPayments = async (req, res) => {
     }
 
     try {
-        const payments = await query;
+        const payments = await query.populate({
+            path: 'booking',
+            populate: [
+              { path: 'room' },
+              { path: 'hotel' },
+              { path: 'user' }
+            ]
+          });
 
         res.status(200).json({
             success: true,
@@ -35,8 +42,17 @@ exports.getPayments = async (req, res) => {
 // @route   GET /api/v1/payments/:id
 // @access  Public
 exports.getPayment = async (req, res) => {
+
+    
     try {
-        const payment = await Payment.findById(req.params.id);
+        const payment = await Payment.findById(req.params.id).populate({
+            path: 'booking',
+            populate: [
+              { path: 'room' },
+              { path: 'hotel' },
+              { path: 'user' }
+            ]
+          });
 
         if (!payment) {
             return res.status(404).json({
