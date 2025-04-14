@@ -5,6 +5,7 @@ const Payment = require('../models/Payment');
 const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
 const { refundCalculation } = require('../utils/refundCalculation');
+const { logCreation } = require('../utils/logCreation');
 const User = require('../models/User');
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -350,6 +351,7 @@ exports.updateBooking = async(req,res,next) => {
             
                 //TODO US2-3 - BE - Create: log refund attempt and outcome
                 console.log(`[REFUND] Refund processed successfully for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`);
+                logCreation( user.id, 'REFUND', `Refund processed for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`,);
             } else {
                 //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
                 console.warn(`[REFUND] Refund failed for Booking ID: ${req.params.id}. No refundable amount available.`);
