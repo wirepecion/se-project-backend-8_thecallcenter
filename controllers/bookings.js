@@ -11,10 +11,26 @@ const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 //@access   Public
 exports.getBookings= async(req,res,next) => {
     let query;
+    const reqQuery = {...req.query};
+    //Fields to exclude from query
+    const removeFields = ['select','sort','page','limit','filter'];
+    removeFields.forEach(param => delete reqQuery[param]);
+    
+    let queryStr = JSON.stringify(reqQuery);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+    let queryFilter = JSON.parse(queryStr);
+    
+    if (req.query.filter) {
+        const filters = req.query.filter.split(",");
+        queryFilter.status = { $in: filters }; // Case-insensitive search
+        console.log(queryFilter.status)
+         
+    }
+    queryObj = Booking.find(queryFilter)
     
     //General users can see only their bookings!
     if (req.user.role === 'user') {
-        query = Booking.find({user:req.user.id})
+        query = queryObj.find({user:req.user.id})
             .populate({
                 path: 'payments',
                 select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
@@ -32,7 +48,7 @@ exports.getBookings= async(req,res,next) => {
                 select:'name'
             });
     } else if (req.user.role === 'hotelManager') {
-        query = Booking.find({hotel:req.user.responsibleHotel})
+        query = queryObj.find({hotel:req.user.responsibleHotel})
             .populate({
                 path: 'payments',
                 select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
@@ -55,7 +71,7 @@ exports.getBookings= async(req,res,next) => {
 
             console.log(req.params.hotelId);
 
-            query = Booking.find({hotel:req.params.hotelId})
+            query = queryObj.find({hotel:req.params.hotelId})
                 .populate({
                     path: 'payments',
                     select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
@@ -75,7 +91,7 @@ exports.getBookings= async(req,res,next) => {
 
         } else {
 
-            query = Booking.find()
+            query = queryObj.find()
                 .populate({
                     path: 'payments',
                     select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
@@ -95,15 +111,64 @@ exports.getBookings= async(req,res,next) => {
 
         }
     }
-    try {
-        const bookings = await query;
+    
+   
 
+    if (req.query.select) {
+        const fields = req.query.select.split(',').join(' ');
+        query = query.select(fields);
+    }
+
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        query = query.sort(sortBy);
+    } else {
+        query = query.sort('createdAt');
+    }
+
+    try {
+        //pagination
+    if(req.query.page || req.query.limit) {
+        const total = await query.clone().countDocuments();
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 5;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        if(startIndex > total) {
+            return res.status(400).json({
+                success:false,
+                message: 'This page does not exist'
+            });
+        }
+        query = query.skip(startIndex).limit(limit).exec();
+        const bookings = await query;
+        const pagination = {};
+            if (endIndex < total) {
+                pagination.next = { page: page + 1, limit };
+            }
+            
+            if (startIndex > 0) {
+                pagination.prev = { page: page - 1, limit };
+            }
         res.status(200).json({
             success:true, 
-            count:bookings.length, 
-            data:bookings
+            count:bookings.length,
+            total: total,
+            totalPages: Math.ceil(total / limit),
+            data:bookings,
+            pagination,
         });
+        }else{
+            const bookings = await query;
+            res.status(200).json({
+                success:true, 
+                count:bookings.length,
+                data:bookings
+            });
+        }
+    
     } catch (error) {
+        console.log(error.message);
         console.log(error);
         res.status(500).json({
             success:false,
