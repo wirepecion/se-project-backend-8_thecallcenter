@@ -175,9 +175,20 @@ exports.updatePayment = async (req, res) => {
                 to: user.email,
                 subject: "[No-reply] New Payment",
                 html: `
-                <h2>ถึงคุณ ${user.name} </h2>
-                <h3>ขอบคุณสำหรับการชำระเงิน BOOKID : ${payment.booking}</h3>
-                <p>ระบบได้รับการชำระเงินขอท่านเรียบร้อยแล้ว กรุณารอระบบตรวจสอบเพื่อทำการยืนยันการชำระเงินนี้</p>`,
+                <div style="font-family: Arial, sans-serif; color: #333;">
+    <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); max-width: 600px; margin: 0 auto;">
+        <h2 style="color:rgb(30, 203, 36);">Thank You for Your Purchase!</h2>
+        <p>Dear <strong>${user.name}</strong>,</p>
+        <p>We’ve successfully received your payment for <strong>BookingID : ${payment.booking}</strong>. Thank you so much for your payment! Your booking is now being processed, 
+        Please note that your booking is still pending approval from our system.</p>
+        <p>Thank you for choosing <strong>The TCC Hotel Booking Team</strong>. We truly appreciate and look forward to delivering an exceptional experience.</p>
+        <div style="margin-top: 20px; font-size: 14px; color: #777;">
+            <p>Best regards,</p>
+            <p><strong>The TCC Hotel Booking Team</strong><br>
+        </div>
+    </div>
+</div>
+`,
             });
 
         } else if (status && ['completed', 'failed'].includes(status)) {
