@@ -1,7 +1,7 @@
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
-const { sendEmail } = require('../utils/sendmail')
+const { sendNewPayment } = require('../utils/sendmail')
 // @desc    Get all payments
 // @route   GET /api/v1/payments
 // @access  Private
@@ -170,26 +170,8 @@ exports.updatePayment = async (req, res) => {
 
             //TO DO (US2-1) : BE - Create: confirmation email
 
-            sendEmail({
-                from: process.env.SMPT_MAIL,
-                to: user.email,
-                subject: "[No-reply] New Payment",
-                html: `
-                <div style="font-family: Arial, sans-serif; color: #333;">
-    <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); max-width: 600px; margin: 0 auto;">
-        <h2 style="color:rgb(30, 203, 36);">Thank You for Your Purchase!</h2>
-        <p>Dear <strong>${user.name}</strong>,</p>
-        <p>We’ve successfully received your payment for <strong>BookingID : ${payment.booking}</strong>. Thank you so much for your payment! Your booking is now being processed, 
-        Please note that your booking is still pending approval from our system.</p>
-        <p>Thank you for choosing <strong>The TCC Hotel Booking Team</strong>. We truly appreciate and look forward to delivering an exceptional experience.</p>
-        <div style="margin-top: 20px; font-size: 14px; color: #777;">
-            <p>Best regards,</p>
-            <p><strong>The TCC Hotel Booking Team</strong><br>
-        </div>
-    </div>
-</div>
-`,
-            });
+            sendNewPayment(user.email, user.name, payment.booking);
+            console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
@@ -252,6 +234,7 @@ exports.updatePayment = async (req, res) => {
             data: payment,
         });
     } catch (error) {
+        console.error(error.message);
         res.status(500).json({
             success: false,
             message: 'Error occurred while updating payment',
