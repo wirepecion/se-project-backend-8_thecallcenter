@@ -3,7 +3,8 @@ const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
-const {sendTOHotelManager} = require("../utils/sendEmails");
+const { sendTOHotelManager } = require("../utils/sendEmails");
+const { sendNewPayment } = require('../utils/sendmail')
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
@@ -19,7 +20,14 @@ exports.getPayments = async (req, res) => {
     }
 
     try {
-        const payments = await query;
+        const payments = await query.populate({
+            path: 'booking',
+            populate: [
+              { path: 'room' },
+              { path: 'hotel' },
+              { path: 'user' }
+            ]
+          });
 
         res.status(200).json({
             success: true,
@@ -38,8 +46,17 @@ exports.getPayments = async (req, res) => {
 // @route   GET /api/v1/payments/:id
 // @access  Public
 exports.getPayment = async (req, res) => {
+
+    
     try {
-        const payment = await Payment.findById(req.params.id);
+        const payment = await Payment.findById(req.params.id).populate({
+            path: 'booking',
+            populate: [
+              { path: 'room' },
+              { path: 'hotel' },
+              { path: 'user' }
+            ]
+          });
 
         if (!payment) {
             return res.status(404).json({
@@ -173,6 +190,9 @@ exports.updatePayment = async (req, res) => {
 
             //TO DO (US2-1) : BE - Create: confirmation email
 
+            sendNewPayment(user.email, user.name, payment.booking);
+            console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
+
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
 
@@ -242,7 +262,7 @@ exports.updatePayment = async (req, res) => {
         });
     } catch (error) {
         console.error(error.message),
-            console.log(error)
+        console.log(error)
         res.status(500).json({
             success: false,
             message: 'Error occurred while updating payment',

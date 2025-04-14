@@ -5,23 +5,38 @@ const Payment = require('../models/Payment');
 const Room = require('../models/Room');
 const { checkout } = require('../routes/auth');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
-
-//อ่านจริงป่าว
-
-//อ่านจริงป่าว
+const { refundCalculation } = require('../utils/refundCalculation');
+const { logCreation } = require('../utils/logCreation');
+const User = require('../models/User');
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
 //@access   Public
 exports.getBookings= async(req,res,next) => {
     let query;
+    const reqQuery = {...req.query};
+    //Fields to exclude from query
+    const removeFields = ['select','sort','page','limit','filter'];
+    removeFields.forEach(param => delete reqQuery[param]);
+    
+    let queryStr = JSON.stringify(reqQuery);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+    let queryFilter = JSON.parse(queryStr);
+    
+    if (req.query.filter) {
+        const filters = req.query.filter.split(",");
+        queryFilter.status = { $in: filters }; // Case-insensitive search
+        console.log(queryFilter.status)
+         
+    }
+    queryObj = Booking.find(queryFilter)
     
     //General users can see only their bookings!
-    if (req.user.role !== 'admin') {
-        query = Booking.find({user:req.user.id})
+    if (req.user.role === 'user') {
+        query = queryObj.find({user:req.user.id})
             .populate({
                 path: 'payments',
-                select: 'amount method status createdAt' // select fields you want from Payment
+                select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
             })
             .populate({
                 path:'room',
@@ -35,15 +50,34 @@ exports.getBookings= async(req,res,next) => {
                 path:'user',
                 select:'name'
             });
+    } else if (req.user.role === 'hotelManager') {
+        query = queryObj.find({hotel:req.user.responsibleHotel})
+            .populate({
+                path: 'payments',
+                select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
+            })
+            .populate({
+                path:'room',
+                select: 'number type price'
+            })
+            .populate({
+                path:'hotel',
+                select: 'name address tel'
+            })
+            .populate({
+                path:'user',
+                select:'name'
+            });
+    
     } else { //If you are an admin, you can see all!
         if (req.params.hotelId) {
 
             console.log(req.params.hotelId);
 
-            query = Booking.find({hotel:req.params.hotelId})
+            query = queryObj.find({hotel:req.params.hotelId})
                 .populate({
                     path: 'payments',
-                    select: 'amount method status createdAt' // select fields you want from Payment
+                    select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
                 })
                 .populate({
                     path:'room',
@@ -60,10 +94,10 @@ exports.getBookings= async(req,res,next) => {
 
         } else {
 
-            query = Booking.find()
+            query = queryObj.find()
                 .populate({
                     path: 'payments',
-                    select: 'amount method status' // select fields you want from Payment
+                    select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
                 })
                 .populate({
                     path:'room',
@@ -80,15 +114,64 @@ exports.getBookings= async(req,res,next) => {
 
         }
     }
-    try {
-        const bookings = await query;
+    
+   
 
+    if (req.query.select) {
+        const fields = req.query.select.split(',').join(' ');
+        query = query.select(fields);
+    }
+
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        query = query.sort(sortBy);
+    } else {
+        query = query.sort('createdAt');
+    }
+
+    try {
+        //pagination
+    if(req.query.page || req.query.limit) {
+        const total = await query.clone().countDocuments();
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 5;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        if(startIndex > total) {
+            return res.status(400).json({
+                success:false,
+                message: 'This page does not exist'
+            });
+        }
+        query = query.skip(startIndex).limit(limit).exec();
+        const bookings = await query;
+        const pagination = {};
+            if (endIndex < total) {
+                pagination.next = { page: page + 1, limit };
+            }
+            
+            if (startIndex > 0) {
+                pagination.prev = { page: page - 1, limit };
+            }
         res.status(200).json({
             success:true, 
-            count:bookings.length, 
-            data:bookings
+            count:bookings.length,
+            total: total,
+            totalPages: Math.ceil(total / limit),
+            data:bookings,
+            pagination,
         });
+        }else{
+            const bookings = await query;
+            res.status(200).json({
+                success:true, 
+                count:bookings.length,
+                data:bookings
+            });
+        }
+    
     } catch (error) {
+        console.log(error.message);
         console.log(error);
         res.status(500).json({
             success:false,
@@ -106,7 +189,7 @@ exports.getBooking= async(req,res,next) => {
         const booking = await Booking.findById(req.params.id)
         .populate({
             path: 'payments',
-            select: 'amount method status createdAt' // select fields you want from Payment
+            select: 'amount method status canceledAt paymentDate' // select fields you want from Payment
         })
         .populate({
             path:'room',
@@ -176,12 +259,12 @@ exports.addBooking = async (req, res, next) => {
         }
 
         // Payment method validation
-        if (!paymentMethod) {
-            return res.status(400).json({
-                success: false,
-                message: 'Payment method is required.',
-            });
-        }
+        // if (!paymentMethod) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'Payment method is required.',
+        //     });
+        // }
 
         // Step 2: Fetch room and check availability
         const room = await Room.findById(roomId);
@@ -239,18 +322,25 @@ exports.addBooking = async (req, res, next) => {
             user: userId,
             amount: room.price,
             status: 'unpaid',
-            method: paymentMethod,
+            
         });
         await payment.save(); // Save payment
 
-        schedulePaymentTimeout(payment._id); 
-
         // Respond with the success response
+        const parsedBooking = booking.toObject();
+        const parsedPayment = payment.toObject();
+        
         res.status(201).json({
             success: true,
             message: 'Booking successfully created',
-            data: booking,
+            data: {
+                booking: parsedBooking,
+                payment: parsedPayment,
+            },
         });
+
+
+
     } catch (error) {
         console.error('Transaction failed:', error);
         res.status(500).json({
@@ -309,21 +399,66 @@ exports.updateBooking = async(req,res,next) => {
                 console.log(`[BOOKING] Admin['${user.id}'] successfully set booking status to 'unpaid'. Booking ID: ${req.params.id}`);
             }
         } else if (status && status === 'canceled') {
-
-            //FOR TEST
-            console.log(`[REFUND] Refund processed successfully for Booking ID: ${req.params.id}. Amount refunded: 2000 THB`);
-
+            try {
             //TODO US2-3 - BE - Create: implement refund logic
+            if(![ 'confirmed', 'checkedIn'].includes(booking.status)){
+                return res.status(400).json({
+                    success: false,
+                    message: 'Booking cannot be canceled at this stage.'
+                });
+            }
+            
+            const payment = await Payment.findOne({
+                booking: req.params.id,
+                status: 'completed'
+            });
+
+            if (!payment) {
+                console.warn(`[PAYMENT] No completed payment found for Booking ID: ${req.params.id}`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'No completed payment found for refund.'
+                });
+            }
+    
+            const paymentPrice = payment.amount;
+
+            let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), paymentPrice); 
             
             //TODO US2-3 - BE - Create: update booking status on cancellation
+            booking.status = status;
+            await booking.save();
+            
+            if (refund > 0) {
+                await User.findByIdAndUpdate(
+                    booking.user,
+                    { $inc: { credit: refund } }
+                );
+            
+                //TODO US2-3 - BE - Create: log refund attempt and outcome
+                console.log(`[REFUND] Refund processed successfully for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`);
+                logCreation( user.id, 'REFUND', `Refund processed for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`,);
+            } else {
+                //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
+                console.warn(`[REFUND] Refund failed for Booking ID: ${req.params.id}. No refundable amount available.`);
 
-            //TODO US2-3 - BE - Create: process refund payment and store result
-
-            //TODO US2-3 - BE - Create: log refund attempt and outcome
-
-            //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
+                return res.status(400).json({
+                    success: false,
+                    message: 'Refund failed. No refundable amount available.'
+                });
+            }
 
             //TODO US2-3 - BE - Create: send email/notification when refund is processed
+
+            } catch (err) {
+                console.error(`[ERROR] Refund process failed for Booking ID: ${req.params.id}.`, err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'An error occurred during the refund process.'
+                });
+            }
+
+            
 
         } else if (status && [ 'confirmed', 'checkedIn', 'completed'].includes(status)){
             if (user.role === 'user') {
