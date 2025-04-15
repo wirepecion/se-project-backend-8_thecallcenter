@@ -3,8 +3,7 @@ const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
-const { sendTOHotelManager } = require("../utils/sendEmails");
-const { sendNewPayment } = require('../utils/sendmail')
+const { sendTOHotelManager, sendNewPayment } = require("../utils/sendEmails");
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments

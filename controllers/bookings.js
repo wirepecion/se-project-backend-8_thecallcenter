@@ -8,6 +8,7 @@ const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 const { refundCalculation } = require('../utils/refundCalculation');
 const { logCreation } = require('../utils/logCreation');
 const User = require('../models/User');
+const { sendRefund } = require('../utils/sendEmails');
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -449,6 +450,8 @@ exports.updateBooking = async(req,res,next) => {
             }
 
             //TODO US2-3 - BE - Create: send email/notification when refund is processed
+            const userInfo = await User.findById(user.id)
+            sendRefund( userInfo.email, userInfo.name, req.params.id, refund)
 
             } catch (err) {
                 console.error(`[ERROR] Refund process failed for Booking ID: ${req.params.id}.`, err);
