@@ -190,7 +190,7 @@ exports.updatePayment = async (req, res) => {
             }
         } else if (status && status === 'pending') {
             payment.status = status;
-            // implement logging for payment activity
+            // logg for payment activity
             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
             logCreation(user.id, 'PAYMENT', `${user.role !== 'user' ?`[${user.role}]`:""}Payment processed set payment status to 'pending' for booking ID: ${payment.booking}`);
             // confirmation email
@@ -341,9 +341,10 @@ exports.deletePayment = async (req, res) => {
         if (booking) {
             await Booking.findByIdAndDelete(payment.booking);
         }
-
+        console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully delete payment. Payment ID: ${payment.id}`);
+        logCreation(user.id, 'PAYMENT', `[${user.role}]Permanent deleted payment(Payment ID: ${payment.id}) for booking ID: ${payment.booking}`)
         await Payment.findByIdAndDelete(req.params.id);
-
+            
         res.status(200).json({
             success: true,
             message: 'Payment deleted successfully',

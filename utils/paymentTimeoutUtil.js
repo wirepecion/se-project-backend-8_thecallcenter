@@ -10,7 +10,7 @@ exports.schedulePaymentTimeout = (paymentId, timeout = 30000) => { //30 seconds 
         await updatedPayment.save();
         //log for payment failure
         console.log(`Payment ${paymentId} status updated to 'failed' due to timeout.`);
-        logCreation(user.id, 'PAYMENT', `[Timeout] Payment ID: ${updatedPayment._id} for booking ID: ${updatedPayment.booking}`)
+        logCreation(user.id, 'PAYMENT', `[Timeout] Payment ID: ${updatedPayment.id} for booking ID: ${updatedPayment.booking}`)
       }
     } catch (err) {
       console.error(`Failed to update payment ${paymentId} after timeout:`, err);
