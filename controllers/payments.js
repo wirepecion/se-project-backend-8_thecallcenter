@@ -336,11 +336,6 @@ exports.deletePayment = async (req, res) => {
                 message: 'Payment not found',
             });
         }
-
-        const booking = await Booking.findById(payment.booking);
-        if (booking) {
-            await Booking.findByIdAndDelete(payment.booking);
-        }
         console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully delete payment. Payment ID: ${payment.id}`);
         logCreation(user.id, 'PAYMENT', `[${user.role}]Permanent deleted payment(Payment ID: ${payment.id}) for booking ID: ${payment.booking}`)
         await Payment.findByIdAndDelete(req.params.id);
