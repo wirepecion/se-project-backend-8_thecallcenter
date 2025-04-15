@@ -132,10 +132,9 @@ exports.getBookings= async(req,res,next) => {
 
     try {
         //pagination
-    if(req.query.page || req.query.limit) {
         const total = await query.clone().countDocuments();
         const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 5;
+        const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
         if(startIndex > total) {
@@ -155,21 +154,14 @@ exports.getBookings= async(req,res,next) => {
                 pagination.prev = { page: page - 1, limit };
             }
         res.status(200).json({
-            success:true, 
+            success:true,
             count:bookings.length,
             total: total,
             totalPages: Math.ceil(total / limit),
             data:bookings,
             pagination,
         });
-        }else{
-            const bookings = await query;
-            res.status(200).json({
-                success:true, 
-                count:bookings.length,
-                data:bookings
-            });
-        }
+        
     
     } catch (error) {
         console.log(error.message);
