@@ -52,7 +52,7 @@ exports.sendNewPayment = (userEmail,userName,bookingId) =>{
 exports.sendRefund = (email, userName, bookingId, refundAmount) =>{
     const mailOptions = {
         from: process.env.SMPT_MAIL,
-                    to: "rirhcceez@gmail.com",
+                    to: email,
                     subject: "🔔 Your refund has been confirmed!",
                     html: `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                             <h2 style="color: #2c3e50;">📄 Refund Details</h2>
