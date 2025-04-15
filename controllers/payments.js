@@ -222,7 +222,7 @@ exports.updatePayment = async (req, res) => {
 
             payment.amount = amount || payment.amount;
             payment.method = method || payment.method;    
-        //}
+        }
 
         await payment.save(); 
 
