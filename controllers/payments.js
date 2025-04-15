@@ -1,6 +1,9 @@
+const User = require('../models/User');
+const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
+const { sendTOHotelManager, sendNewPayment } = require("../utils/sendEmails");
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
@@ -16,7 +19,14 @@ exports.getPayments = async (req, res) => {
     }
 
     try {
-        const payments = await query;
+        const payments = await query.populate({
+            path: 'booking',
+            populate: [
+              { path: 'room' },
+              { path: 'hotel' },
+              { path: 'user' }
+            ]
+          });
 
         res.status(200).json({
             success: true,
@@ -36,7 +46,14 @@ exports.getPayments = async (req, res) => {
 // @access  Public
 exports.getPayment = async (req, res) => {
     try {
-        const payment = await Payment.findById(req.params.id);
+        const payment = await Payment.findById(req.params.id).populate({
+            path: 'booking',
+            populate: [
+              { path: 'room' },
+              { path: 'hotel' },
+              { path: 'user' }
+            ]
+          });
 
         if (!payment) {
             return res.status(404).json({
@@ -165,10 +182,8 @@ exports.updatePayment = async (req, res) => {
             }
         } else if (status && status === 'pending') {
             payment.status = status;
-
-            //TO DO (US2-1) : BE - Create: implement logging for payment activity
-
-            //TO DO (US2-1) : BE - Create: confirmation email
+            sendNewPayment(user.email, user.name, payment.booking);
+             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
@@ -185,6 +200,11 @@ exports.updatePayment = async (req, res) => {
                 //TO DO (US2-5) : BE - Create: send notification to hotel manager when admin updates a payment
 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
+                const booking = await Booking.findById(payment.booking)
+                const hotel = await Hotel.findById(booking.hotel)
+                const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+                const customer = await User.findById(payment.user)
+                sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
             
             payment.status = status; // both admin and manager run here
@@ -197,7 +217,6 @@ exports.updatePayment = async (req, res) => {
                 success: false,
                 message: 'Cannot cancel a payment directly.Payment must be cancel through refunding booking.'
             })
-            
 
         } else if (status) {
             console.warn(`[VALIDATION] ${user.role} ['${user.id}'] attempted to set invalid payment status '${status}'. Payment ID: ${payment.id}`);
@@ -228,6 +247,8 @@ exports.updatePayment = async (req, res) => {
             data: payment,
         });
     } catch (error) {
+        console.error(error.message),
+         console.log(error)
         res.status(500).json({
             success: false,
             message: 'Error occurred while updating payment',
