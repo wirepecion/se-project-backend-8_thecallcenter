@@ -4,13 +4,13 @@ const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 const { sendTOHotelManager, sendNewPayment } = require("../utils/sendEmails");
+const { logCreation} = require('../utils/logCreation');
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
 // @access  Private
 exports.getPayments = async (req, res) => {
     let query;
-        
     //General users can see only their bookings!
     if (req.user.role !== 'admin') {
         query = Payment.find({user:req.user.id});
@@ -171,7 +171,7 @@ exports.updatePayment = async (req, res) => {
         if (status && status === 'unpaid') {
             if(user.role !== 'admin') {
                 console.warn(`[SECURITY] ${user.role} ['${user.id}'] attempted to set payment status to 'unpaid' (not allowed). Payment ID: ${payment.id}`);
-
+                logCreation(user.id,'WARNING', `Warning [${user.role}] attempted to set payment status to 'unpaid' for booking ID: ${payment.booking} `)
                 return res.status(400).json({
                     success: false,
                     message: `Cannot update the payment status to 'unpaid' as the user is not an admin.`
@@ -185,18 +185,17 @@ exports.updatePayment = async (req, res) => {
         } else if (status && status === 'pending') {
             payment.status = status;
 
-            //TO DO (US2-1) : BE - Create: implement logging for payment activity
-
-            //TO DO (US2-1) : BE - Create: confirmation email
-
-            sendNewPayment(user.email, user.name, payment.booking);
+            // implement logging for payment activity
             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
+            logCreation(user.id, 'PAYMENT', `${user.role !== 'user' ?`[${user.role}]`:""}Payment processed set payment status to 'pending' for booking ID: ${payment.booking}`);
+            // confirmation email
+            sendNewPayment(user.email, user.name, payment.booking);
+            
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
-
                 console.warn(`[SECURITY] User '${user.id}' with role '${user.role}' attempted to update payment status to '${status}' (not allowed). Payment ID: ${payment.id}`);
-
+                logCreation(user.id,'WARNING', `Warning [${user.role}] attempted to set payment status to '${status}' for booking ID: ${payment.booking} `)
                 return res.status(403).json({
                     success: false,
                     message: `You are not allowed to update the payment status to '${status}'`
@@ -205,9 +204,7 @@ exports.updatePayment = async (req, res) => {
 
             if (user.role === 'admin') {
                 //TO DO (US2-5) : BE - Create: send notification to hotel manager when admin updates a payment
-
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
-                
                 const booking = await Booking.findById(payment.booking)
                 const hotel = await Hotel.findById(booking.hotel)
                 const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
@@ -217,9 +214,8 @@ exports.updatePayment = async (req, res) => {
             }
             
             payment.status = status; // both admin and manager run here
-
             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully updated payment status to '${status}'. Payment ID: ${payment.id}`);
-
+            logCreation(user.id, 'PAYMENT', `[${user.role}]Payment processed set payment status to '${status}' for booking ID: ${payment.booking}`)
         } else if (status && status === 'canceled') {
             payment.status = status;
             
@@ -261,7 +257,7 @@ exports.updatePayment = async (req, res) => {
         });
     } catch (error) {
         console.error(error.message),
-        console.log(error)
+        console.error(error)
         res.status(500).json({
             success: false,
             message: 'Error occurred while updating payment',
