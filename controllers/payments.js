@@ -207,7 +207,7 @@ exports.updatePayment = async (req, res) => {
                     message: `You are not allowed to update the payment status to '${status}'`
                 });
             }
-
+            const booking = await Booking.findById(payment.booking)
             if (user.role === 'admin') {
                 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
@@ -218,7 +218,10 @@ exports.updatePayment = async (req, res) => {
                 sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
             
+            
             payment.status = status; // both admin and manager run here
+            booking.status = 'confirmed'; 
+            await booking.save();
             // log for setting payment status to completed/failed
             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully updated payment status to '${status}'. Payment ID: ${payment.id}`);
             logCreation(user.id, 'PAYMENT', `[${user.role}]Payment processed set payment status to '${status}' for booking ID: ${payment.booking}`)
