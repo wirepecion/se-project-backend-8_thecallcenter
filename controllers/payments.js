@@ -213,7 +213,7 @@ exports.updatePayment = async (req, res) => {
             
             
             payment.status = status; // both admin and manager run here
-            booking.status = 'confirmed'; 
+            if(status === 'completed') booking.status = 'confirmed'; 
             await booking.save();
             // log for setting payment status to completed/failed
             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully updated payment status to '${status}'. Payment ID: ${payment.id}`);
