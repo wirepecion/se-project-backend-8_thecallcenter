@@ -9,6 +9,7 @@ const { refundCalculation } = require('../utils/refundCalculation');
 const { logCreation } = require('../utils/logCreation');
 const User = require('../models/User');
 const { sendRefund } = require('../utils/sendEmails');
+const { register } = require('./auth');
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -127,15 +128,14 @@ exports.getBookings= async(req,res,next) => {
         const sortBy = req.query.sort.split(',').join(' ');
         query = query.sort(sortBy);
     } else {
-        query = query.sort('createdAt');
+        query = query.sort('-createdAt');
     }
 
     try {
         //pagination
-    if(req.query.page || req.query.limit) {
         const total = await query.clone().countDocuments();
         const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 5;
+        const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
         if(startIndex > total) {
@@ -155,21 +155,14 @@ exports.getBookings= async(req,res,next) => {
                 pagination.prev = { page: page - 1, limit };
             }
         res.status(200).json({
-            success:true, 
+            success:true,
             count:bookings.length,
             total: total,
             totalPages: Math.ceil(total / limit),
             data:bookings,
             pagination,
         });
-        }else{
-            const bookings = await query;
-            res.status(200).json({
-                success:true, 
-                count:bookings.length,
-                data:bookings
-            });
-        }
+        
     
     } catch (error) {
         console.log(error.message);
@@ -321,7 +314,7 @@ exports.addBooking = async (req, res, next) => {
         const payment = new Payment({
             booking: booking._id,
             user: userId,
-            amount: room.price,
+            amount: room.price* (newCheckOutDate - newCheckInDate) / (1000 * 60 * 60 * 24), 
             status: 'unpaid',
             
         });
@@ -366,7 +359,12 @@ exports.updateBooking = async(req,res,next) => {
         }
 
         //Make sure the user is the booking owner
-        if (booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        if ((req.user.role === 'user' && booking.user.toString() !== req.user.id )
+            || (req.user.role === 'hotelManager' && booking.hotel.toString() !== req.user.responsibleHotel )) {
+
+            console.warn(`[SECURITY] User ['${req.user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
+            logCreation( req.user.id, 'SECURITY', `${register.user.role} ['${req.user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
+
             return res.status(401).json({
                 success:false,
                 message: `User ${req.user.id} is not authorized to update this booking`
@@ -427,10 +425,14 @@ exports.updateBooking = async(req,res,next) => {
             let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), paymentPrice); 
             
             //TODO US2-3 - BE - Create: update booking status on cancellation
-            booking.status = status;
-            await booking.save();
+            
             
             if (refund > 0) {
+                booking.status = status;
+
+                payment.status = 'canceled';
+                await payment.save();
+
                 await User.findByIdAndUpdate(
                     booking.user,
                     { $inc: { credit: refund } }

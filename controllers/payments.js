@@ -4,7 +4,7 @@ const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 const { sendTOHotelManager, sendNewPayment } = require("../utils/sendEmails");
-const { logCreation} = require('../utils/logCreation');
+const { logCreation } = require('../utils/logCreation');
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
@@ -45,8 +45,6 @@ exports.getPayments = async (req, res) => {
 // @route   GET /api/v1/payments/:id
 // @access  Public
 exports.getPayment = async (req, res) => {
-
-    
     try {
         const payment = await Payment.findById(req.params.id).populate({
             path: 'booking',
@@ -190,12 +188,8 @@ exports.updatePayment = async (req, res) => {
             }
         } else if (status && status === 'pending') {
             payment.status = status;
-            // logg for payment activity
-            console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
-            logCreation(user.id, 'PAYMENT', `${user.role !== 'user' ?`[${user.role}]`:""}Payment processed set payment status to 'pending' for booking ID: ${payment.booking}`);
-            // confirmation email
             sendNewPayment(user.email, user.name, payment.booking);
-            
+             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
@@ -207,7 +201,7 @@ exports.updatePayment = async (req, res) => {
                     message: `You are not allowed to update the payment status to '${status}'`
                 });
             }
-
+            const booking = await Booking.findById(payment.booking)
             if (user.role === 'admin') {
                 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
@@ -218,32 +212,31 @@ exports.updatePayment = async (req, res) => {
                 sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
             
+            
             payment.status = status; // both admin and manager run here
+            if(status === 'completed') booking.status = 'confirmed'; 
+            await booking.save();
             // log for setting payment status to completed/failed
             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully updated payment status to '${status}'. Payment ID: ${payment.id}`);
             logCreation(user.id, 'PAYMENT', `[${user.role}]Payment processed set payment status to '${status}' for booking ID: ${payment.booking}`)
         } else if (status && status === 'canceled') {
-            payment.status = status;
-            
-            //TO DO (US2-3) : BE - Create: log refund attempt and outcome
-
-            //TO DO (US2-3) : BE - Create: send email/notification when refund is processed
-
+            console.warn(`[VALIDATION] ${user.id} attempted to set payment status to 'canceled' (not allowed). Payment ID: ${payment.id}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot cancel a payment directly.Payment must be cancel through refunding booking.'
+            })
 
         } else if (status) {
             console.warn(`[VALIDATION] ${user.role} ['${user.id}'] attempted to set invalid payment status '${status}'. Payment ID: ${payment.id}`);
-
             return res.status(400).json({
                 success: false,
                 message: 'Invalid payment status. Allowed values: unpaid, pending, completed, failed, canceled.'
             });
         }
 
-        //if (!status){
-            
+        if (!status){
             if (method && !['Card', 'Bank', 'ThaiQR'].includes(method)) {
                 console.warn(`[VALIDATION] User '${user.id}' attempted to set invalid payment method '${method}'. Payment ID: ${payment.id}`);
-
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid payment method. Allowed values: Card, Bank, ThaiQR.'
@@ -252,7 +245,7 @@ exports.updatePayment = async (req, res) => {
 
             payment.amount = amount || payment.amount;
             payment.method = method || payment.method;    
-        //}
+        }
 
         await payment.save(); 
 
@@ -263,62 +256,10 @@ exports.updatePayment = async (req, res) => {
         });
     } catch (error) {
         console.error(error.message),
-        console.error(error)
+         console.log(error)
         res.status(500).json({
             success: false,
             message: 'Error occurred while updating payment',
-        });
-    }
-};
-
-// @desc    Cancel a payment (soft delete)
-// @route   PUT /api/v1/payments/:id/cancel
-// @access  Private
-exports.cancelPayment = async (req, res) => {
-    try {
-        // Find the payment by ID
-        const payment = await Payment.findById(req.params.id);
-
-        if (!payment) {
-            return res.status(404).json({
-                success: false,
-                message: 'Payment not found',
-            });
-        }
-
-        // check if the user is the owner of this payment
-        if (payment.user.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(401).json({
-                success:false,
-                message: `User ${req.user.id} is not authorized to cancel this payment`
-            });
-        }
-
-        // Check if the payment status is 'booked' or 'checkedIn' before allowing cancellation
-        if (!['booked', 'checkedIn'].includes(payment.status) && req.user.role !== 'admin') {
-            return res.status(400).json({
-                success: false,
-                message: 'Payment can only be canceled if it is in booked or checkedIn status',
-            });
-        }
-
-        // Mark the payment as canceled (soft delete)
-        payment.status = 'canceled';
-        payment.canceledAt = new Date();
-
-        // Save the updated payment
-        await payment.save();
-
-        res.status(200).json({
-            success: true,
-            message: 'Payment has been successfully canceled',
-            data: payment,
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: 'Error occurred while canceling payment',
         });
     }
 };

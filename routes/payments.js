@@ -1,5 +1,5 @@
 const express = require('express');
-const { getPayments, getPayment, createPayment, updatePayment, cancelPayment, deletePayment } = require('../controllers/payments');
+const { getPayments, getPayment, createPayment, updatePayment, deletePayment } = require('../controllers/payments');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router({mergeParams:true});
@@ -13,8 +13,6 @@ router.route('/:id')
     .put(protect, authorize('admin','user','hotelManager'), updatePayment)
     .delete(protect, authorize('admin','user',), deletePayment);
 
-router.route('/:id/cancel')
-    .put(protect, authorize('admin','user','hotelManager'), cancelPayment);
 
 module.exports = router;
 
