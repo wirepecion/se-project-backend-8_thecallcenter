@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
 const { schedulePaymentTimeout } = require('../utils/paymentTimeoutUtil');
 const { sendTOHotelManager, sendNewPayment } = require("../utils/sendEmails");
+const { logCreation } = require('../utils/logCreation');
 
 // @desc    Get all payments
 // @route   GET /api/v1/payments
