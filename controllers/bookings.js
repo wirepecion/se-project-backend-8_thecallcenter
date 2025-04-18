@@ -314,7 +314,7 @@ exports.addBooking = async (req, res, next) => {
         const payment = new Payment({
             booking: booking._id,
             user: userId,
-            amount: room.price,
+            amount: room.price* (newCheckOutDate - newCheckInDate) / (1000 * 60 * 60 * 24), 
             status: 'unpaid',
             
         });
