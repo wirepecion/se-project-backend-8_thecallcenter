@@ -33,17 +33,37 @@ const limiter = rateLimit({
     max: 100
 });
 
-const swaggerOptions={
-    swaggerDefinition:{
-    openapi: '3.0.0',
-    info: {
-    title: 'Library API',
-    version: '1.0.0',
-    description: 'A simple Express VacQ API'
-    }
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'VacQ Hotel API',
+            version: '1.0.0',
+            description: 'API documentation for hotel booking system',
+        },
+        servers: [
+            {
+            url: 'http://localhost:5000/api/v1',
+            },
+        ],
+        components: {
+            securitySchemes: {
+            bearerAuth: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT',
+            },
+            },
+        },
+        security: [
+            {
+            bearerAuth: [],
+            },
+        ],
     },
-    apis:['./routes/*.js'],
-};
+    apis: ['./routes/*.js', './controllers/*.js'],
+};  
+  
 const swaggerDocs=swaggerJsDoc(swaggerOptions);
 
 //Enable CORS
@@ -52,9 +72,21 @@ app.use(cors());
 // Body parser
 app.use(express.json());
 app.use(mongoSanitize());
-app.use(helmet());
 app.use(xss());
 app.use(limiter);
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            useDefaults: true,
+            directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", 'cdn.jsdelivr.net'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'cdn.jsdelivr.net'],
+            imgSrc: ["'self'", 'data:', 'cdn.jsdelivr.net'],
+            },
+        },
+    })
+);
 
 // app.use("/api", require("./routes/email"))
 app.use('/api/v1/hotels',hotels);

@@ -24,30 +24,28 @@ module.exports = router;
  *       required:
  *         - name
  *         - address
- *         - tel
  *       properties:
  *         id:
  *           type: string
- *           format: uuid
- *           description: The auto-generated id of the hotel
- *           example: d290f1ee-6c54-4b01-90e6-d701748f0851
+ *           description: The auto-generated ID of the hotel
  *         name:
  *           type: string
  *           description: Hotel name
  *         address:
  *           type: string
- *           description: House No., Street, Road
+ *           description: Street address
  *         tel:
  *           type: string
  *           description: Telephone number
  *         picture:
  *           type: string
- *           description: hotel picture
+ *           description: Hotel picture URL
  *       example:
  *         id: 609bda561452242d88d36e37
  *         name: Happy Hotel
  *         address: 121 ถ.สุขุมวิท
  *         tel: 02-2187000
+ *         picture: "https://example.com/hotel.jpg"
  */
 /**
 * @swagger
@@ -60,40 +58,47 @@ module.exports = router;
  * @swagger
  * /hotels:
  *   get:
- *     summary: Returns the list of all the hotels
+ *     summary: Get all hotels
  *     tags: [Hotels]
  *     responses:
  *       200:
- *         description: The list of the hotels
+ *         description: List of hotels
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Hotel'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Hotel'
  */
 /**
  * @swagger
  * /hotels/{id}:
  *   get:
- *     summary: Get the hotel by id
+ *     summary: Get a single hotel by ID
  *     tags: [Hotels]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The hotel id
+ *         description: Hotel ID
  *     responses:
  *       200:
- *         description: The hotel description by id
+ *         description: Hotel found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Hotel'
  *       404:
- *         description: The hotel was not found
+ *         description: Hotel not found
  */
 /**
  * @swagger
@@ -106,64 +111,112 @@ module.exports = router;
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Hotel'
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               tel:
+ *                 type: string
+ *               picture:
+ *                 type: string
+ *               rooms:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     type:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *             required:
+ *               - name
+ *               - address
+ *               - rooms
  *     responses:
  *       201:
- *         description: The hotel was successfully created
+ *         description: Hotel created
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Hotel'
+ *       400:
+ *         description: Bad request
  *       500:
- *         description: Some server error
+ *         description: Server error
  */
 /**
  * @swagger
  * /hotels/{id}:
  *   put:
- *     summary: Update the hotel by the id
+ *     summary: Update a hotel by ID
  *     tags: [Hotels]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The hotel id
+ *         description: Hotel ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Hotel'
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               tel:
+ *                 type: string
+ *               picture:
+ *                 type: string
+ *               rooms:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     type:
+ *                       type: string
+ *                     price:
+ *                       type: number
  *     responses:
  *       200:
- *         description: The hotel was updated
+ *         description: Hotel updated
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Hotel'
  *       404:
- *         description: The hotel was not found
+ *         description: Hotel not found
  *       500:
- *         description: Some error happened
+ *         description: Server error
  */
 /**
  * @swagger
  * /hotels/{id}:
  *   delete:
- *     summary: Remove the hotel by id
+ *     summary: Delete a hotel by ID
  *     tags: [Hotels]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The hotel id
+ *         description: Hotel ID
  *     responses:
  *       200:
- *         description: The hotel was deleted
+ *         description: Hotel deleted
  *       404:
- *         description: The hotel was not found
+ *         description: Hotel not found
+ *       500:
+ *         description: Server error
  */

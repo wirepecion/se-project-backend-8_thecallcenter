@@ -17,6 +17,13 @@ module.exports = router;
 
 /**
  * @swagger
+ * tags:
+ *   name: Rooms
+ *   description: The rooms managing API
+ */
+
+/**
+ * @swagger
  * components:
  *   schemas:
  *     Room:
@@ -30,19 +37,14 @@ module.exports = router;
  *         id:
  *           type: string
  *           format: uuid
- *           description: The auto-generated id of the room
- *           example: d290f1ee-6c54-4b01-90e6-d701748f0851
+ *           description: Auto-generated room ID
  *         hotel:
- *           type: mongoose.Schema.ObjectId
- *           description: Room hotel
+ *           type: string
+ *           description: ObjectId of the hotel this room belongs to
  *         type:
  *           type: string
+ *           enum: [standard, superior, deluxe, suite]
  *           description: Type of room
- *           enum: 
- *             - standard
- *             - superior
- *             - deluxe
- *             - suite
  *         number:
  *           type: number
  *           description: Room number
@@ -51,71 +53,48 @@ module.exports = router;
  *           description: Room price
  *         unavailablePeriod:
  *           type: array
- *           description: Array of startDate and endDate of unaailable periods
+ *           description: Date ranges when the room is unavailable
  *           items:
- *             type: string
- *             format: date-time
+ *             type: object
+ *             properties:
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
  *       example:
  *         id: 609bda561452242d88d36e37
- *         hotel: Happy Hotel
- *         type: standard
- *         price: 1000
+ *         hotel: 609bd9991452242d88d36e12
+ *         type: deluxe
+ *         number: 201
+ *         price: 3000
  *         unavailablePeriod:
- *           - '2025-03-22T15:30:00Z'
- *           - '2025-03-24T10:00:00Z'
+ *           - startDate: '2025-04-20T14:00:00Z'
+ *             endDate: '2025-04-22T12:00:00Z'
  */
+
 /**
-* @swagger
-*   tags:
-*     name: Rooms
-*     description: The rooms managing API
-*/
-/**
- * 
  * @swagger
  * /rooms:
  *   get:
- *     summary: Returns the list of all the rooms
+ *     summary: Get all rooms
  *     tags: [Rooms]
  *     responses:
  *       200:
- *         description: The list of the rooms
+ *         description: List of all rooms
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Room'
- */
-/**
- * @swagger
- * /rooms/{id}:
- *   get:
- *     summary: Get the room by id
- *     tags: [Rooms]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: The room id
- *     responses:
- *       200:
- *         description: The room description by id
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Room'
- *       404:
- *         description: The room was not found
- */
-/**
- * @swagger
- * /rooms:
+ * 
  *   post:
  *     summary: Create a new room
  *     tags: [Rooms]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -124,27 +103,52 @@ module.exports = router;
  *             $ref: '#/components/schemas/Room'
  *     responses:
  *       201:
- *         description: The room was successfully created
+ *         description: Room created successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Room'
- *       500:
- *         description: Some server error
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Not authorized
  */
+
 /**
  * @swagger
  * /rooms/{id}:
- *   put:
- *     summary: Update the room by the id
+ *   get:
+ *     summary: Get room by ID
  *     tags: [Rooms]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
+ *         description: The room ID
+ *     responses:
+ *       200:
+ *         description: Room found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Room'
+ *       404:
+ *         description: Room not found
+ * 
+ *   put:
+ *     summary: Update a room
+ *     tags: [Rooms]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: The room id
+ *         schema:
+ *           type: string
+ *         description: The room ID
  *     requestBody:
  *       required: true
  *       content:
@@ -153,32 +157,37 @@ module.exports = router;
  *             $ref: '#/components/schemas/Room'
  *     responses:
  *       200:
- *         description: The room was updated
+ *         description: Room updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Room'
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Not authorized
  *       404:
- *         description: The room was not found
- *       500:
- *         description: Some error happened
- */
-/**
- * @swagger
- * /rooms/{id}:
+ *         description: Room not found
+ * 
  *   delete:
- *     summary: Remove the room by id
+ *     summary: Delete a room
  *     tags: [Rooms]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The room id
+ *         description: The room ID
  *     responses:
  *       200:
- *         description: The room was deleted
+ *         description: Room deleted successfully
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Not authorized
  *       404:
- *         description: The room was not found
+ *         description: Room not found
  */
