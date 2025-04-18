@@ -33,6 +33,7 @@ module.exports=router;
  *           description: Full name of the user
  *         tel:
  *           type: string
+ *           pattern: '^[0-9]{10}$'
  *           description: 10-digit Thai phone number
  *         email:
  *           type: string
@@ -44,15 +45,16 @@ module.exports=router;
  *           default: user
  *         credit:
  *           type: number
+ *           default: 0
  *           description: User’s credit balance
  *         responsibleHotel:
  *           type: string
  *           format: uuid
- *           description: Hotel this manager is responsible for
+ *           description: Hotel the user manages (if hotelManager)
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: Account creation time
+ *           description: Account creation timestamp
  *       example:
  *         id: 609bda561452242d88d36e37
  *         name: John Doe
@@ -62,17 +64,11 @@ module.exports=router;
  *         credit: 500
  *         responsibleHotel: "60a775d13b1f8b001f8d6f9c"
  *         createdAt: "2025-04-18T10:00:00Z"
- */
 
-/**
- * @swagger
  * tags:
  *   name: Auth
  *   description: User authentication & account management
- */
 
-/**
- * @swagger
  * /auth/register:
  *   post:
  *     summary: Register a new user
@@ -103,10 +99,7 @@ module.exports=router;
  *         description: User registered successfully
  *       400:
  *         description: Validation error
- */
 
-/**
- * @swagger
  * /auth/login:
  *   post:
  *     summary: Login a user
@@ -131,10 +124,7 @@ module.exports=router;
  *         description: Login successful
  *       401:
  *         description: Invalid credentials
- */
 
-/**
- * @swagger
  * /auth/me:
  *   get:
  *     summary: Get current logged-in user profile
@@ -150,10 +140,7 @@ module.exports=router;
  *               $ref: '#/components/schemas/User'
  *       401:
  *         description: Unauthorized
- */
 
-/**
- * @swagger
  * /auth/logout:
  *   get:
  *     summary: Logout current user

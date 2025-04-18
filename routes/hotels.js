@@ -17,6 +17,13 @@ module.exports = router;
 
 /**
  * @swagger
+ * tags:
+ *   name: Hotels
+ *   description: The hotels management API
+ */
+
+/**
+ * @swagger
  * components:
  *   schemas:
  *     Hotel:
@@ -27,6 +34,7 @@ module.exports = router;
  *       properties:
  *         id:
  *           type: string
+ *           format: uuid
  *           description: The auto-generated ID of the hotel
  *         name:
  *           type: string
@@ -39,7 +47,19 @@ module.exports = router;
  *           description: Telephone number
  *         picture:
  *           type: string
- *           description: Hotel picture URL
+ *           format: uri
+ *           description: Hotel image URL
+ *         rooms:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *               price:
+ *                 type: number
  *       example:
  *         id: 609bda561452242d88d36e37
  *         name: Happy Hotel
@@ -47,14 +67,8 @@ module.exports = router;
  *         tel: 02-2187000
  *         picture: "https://example.com/hotel.jpg"
  */
+
 /**
-* @swagger
-*   tags:
-*     name: Hotels
-*     description: The hotels managing API
-*/
-/**
- * 
  * @swagger
  * /hotels:
  *   get:
@@ -76,7 +90,33 @@ module.exports = router;
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Hotel'
+ *
+ *   post:
+ *     summary: Create a new hotel
+ *     tags: [Hotels]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Hotel'
+ *     responses:
+ *       201:
+ *         description: Hotel created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Hotel'
+ *       400:
+ *         description: Validation or bad request error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  */
+
 /**
  * @swagger
  * /hotels/{id}:
@@ -99,61 +139,12 @@ module.exports = router;
  *               $ref: '#/components/schemas/Hotel'
  *       404:
  *         description: Hotel not found
- */
-/**
- * @swagger
- * /hotels:
- *   post:
- *     summary: Create a new hotel
- *     tags: [Hotels]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               address:
- *                 type: string
- *               tel:
- *                 type: string
- *               picture:
- *                 type: string
- *               rooms:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     name:
- *                       type: string
- *                     type:
- *                       type: string
- *                     price:
- *                       type: number
- *             required:
- *               - name
- *               - address
- *               - rooms
- *     responses:
- *       201:
- *         description: Hotel created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Hotel'
- *       400:
- *         description: Bad request
- *       500:
- *         description: Server error
- */
-/**
- * @swagger
- * /hotels/{id}:
+ *
  *   put:
  *     summary: Update a hotel by ID
  *     tags: [Hotels]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -166,27 +157,7 @@ module.exports = router;
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               address:
- *                 type: string
- *               tel:
- *                 type: string
- *               picture:
- *                 type: string
- *               rooms:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     name:
- *                       type: string
- *                     type:
- *                       type: string
- *                     price:
- *                       type: number
+ *             $ref: '#/components/schemas/Hotel'
  *     responses:
  *       200:
  *         description: Hotel updated
@@ -194,17 +165,20 @@ module.exports = router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Hotel'
+ *       400:
+ *         description: Invalid input
  *       404:
  *         description: Hotel not found
- *       500:
- *         description: Server error
- */
-/**
- * @swagger
- * /hotels/{id}:
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *
  *   delete:
  *     summary: Delete a hotel by ID
  *     tags: [Hotels]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -214,9 +188,11 @@ module.exports = router;
  *         description: Hotel ID
  *     responses:
  *       200:
- *         description: Hotel deleted
+ *         description: Hotel deleted successfully
  *       404:
  *         description: Hotel not found
- *       500:
- *         description: Server error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  */

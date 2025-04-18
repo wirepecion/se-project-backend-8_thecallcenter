@@ -27,11 +27,8 @@ module.exports = router;
  * @swagger
  * tags:
  *   name: Bookings
- *   description: API for managing bookings
- */
-
-/**
- * @swagger
+ *   description: API for managing hotel room bookings
+ *
  * components:
  *   schemas:
  *     Booking:
@@ -49,42 +46,43 @@ module.exports = router;
  *           description: Auto-generated booking ID
  *         user:
  *           type: string
+ *           format: uuid
  *           description: The user who made the booking
  *         room:
  *           type: string
+ *           format: uuid
  *           description: The room being booked
  *         hotel:
  *           type: string
- *           description: The hotel where the booking is made
+ *           format: uuid
+ *           description: The hotel associated with the booking
  *         checkInDate:
  *           type: string
  *           format: date-time
- *           description: The check-in date for the booking
+ *           description: Check-in date
  *         checkOutDate:
  *           type: string
  *           format: date-time
- *           description: The check-out date for the booking
+ *           description: Check-out date
  *         status:
  *           type: string
- *           enum: ['pending', 'confirmed', 'canceled', 'checkedIn', 'completed']
- *           description: The current status of the booking
+ *           enum: [pending, confirmed, canceled, checkedIn, completed]
+ *           default: pending
+ *           description: Current status of the booking
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: The date when the booking was created
+ *           description: Date the booking was created
  *       example:
- *         id: 609bda561452242d88d36e37
- *         user: 609bd9991452242d88d36e12
- *         room: 609bd9991452242d88d36e14
- *         hotel: 609bd9991452242d88d36e15
- *         checkInDate: '2025-05-01T15:00:00Z'
- *         checkOutDate: '2025-05-07T12:00:00Z'
+ *         id: "609bda561452242d88d36e37"
+ *         user: "609bd9991452242d88d36e12"
+ *         room: "609bd9991452242d88d36e14"
+ *         hotel: "609bd9991452242d88d36e15"
+ *         checkInDate: "2025-05-01T15:00:00Z"
+ *         checkOutDate: "2025-05-07T12:00:00Z"
  *         status: confirmed
- *         createdAt: '2025-04-18T10:00:00Z'
- */
-
-/**
- * @swagger
+ *         createdAt: "2025-04-18T10:00:00Z"
+ *
  * /bookings:
  *   get:
  *     summary: Get all bookings
@@ -93,7 +91,7 @@ module.exports = router;
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of all bookings
+ *         description: A list of bookings
  *         content:
  *           application/json:
  *             schema:
@@ -101,8 +99,8 @@ module.exports = router;
  *               items:
  *                 $ref: '#/components/schemas/Booking'
  *       401:
- *         description: Unauthorized - Token required
- * 
+ *         description: Unauthorized - Token missing or invalid
+ *
  *   post:
  *     summary: Create a new booking
  *     tags: [Bookings]
@@ -113,7 +111,32 @@ module.exports = router;
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Booking'
+ *             type: object
+ *             required:
+ *               - user
+ *               - room
+ *               - hotel
+ *               - checkInDate
+ *               - checkOutDate
+ *             properties:
+ *               user:
+ *                 type: string
+ *               room:
+ *                 type: string
+ *               hotel:
+ *                 type: string
+ *               checkInDate:
+ *                 type: string
+ *                 format: date-time
+ *               checkOutDate:
+ *                 type: string
+ *                 format: date-time
+ *           example:
+ *             user: "609bd9991452242d88d36e12"
+ *             room: "609bd9991452242d88d36e14"
+ *             hotel: "609bd9991452242d88d36e15"
+ *             checkInDate: "2025-05-01T15:00:00Z"
+ *             checkOutDate: "2025-05-07T12:00:00Z"
  *     responses:
  *       201:
  *         description: Booking created successfully
@@ -122,44 +145,43 @@ module.exports = router;
  *             schema:
  *               $ref: '#/components/schemas/Booking'
  *       400:
- *         description: Bad Request - Invalid data
+ *         description: Validation error or bad input
  *       401:
- *         description: Unauthorized - Token required
+ *         description: Unauthorized - Token missing or invalid
  *       403:
- *         description: Forbidden - Not authorized
- */
-
-/**
- * @swagger
+ *         description: Forbidden - Not enough permissions
+ *
  * /bookings/{id}:
  *   get:
- *     summary: Get a booking by ID
+ *     summary: Get a specific booking by ID
  *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
  *         required: true
  *         schema:
  *           type: string
  *         description: The booking ID
  *     responses:
  *       200:
- *         description: Booking found by ID
+ *         description: Booking found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Booking'
  *       404:
  *         description: Booking not found
- * 
+ *
  *   put:
  *     summary: Update a booking by ID
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
  *         required: true
  *         schema:
  *           type: string
@@ -178,22 +200,22 @@ module.exports = router;
  *             schema:
  *               $ref: '#/components/schemas/Booking'
  *       400:
- *         description: Invalid data
+ *         description: Invalid input
  *       404:
  *         description: Booking not found
  *       401:
- *         description: Unauthorized - Token required
+ *         description: Unauthorized
  *       403:
- *         description: Forbidden - Not authorized
- * 
+ *         description: Forbidden - Not enough permissions
+ *
  *   delete:
  *     summary: Delete a booking by ID
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
  *         required: true
  *         schema:
  *           type: string
@@ -204,7 +226,7 @@ module.exports = router;
  *       404:
  *         description: Booking not found
  *       401:
- *         description: Unauthorized - Token required
+ *         description: Unauthorized
  *       403:
- *         description: Forbidden - Not authorized
+ *         description: Forbidden - Not enough permissions
  */

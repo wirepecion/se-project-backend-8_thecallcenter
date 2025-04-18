@@ -19,7 +19,7 @@ module.exports = router;
  * @swagger
  * tags:
  *   name: Rooms
- *   description: The rooms managing API
+ *   description: Manage rooms in hotels
  */
 
 /**
@@ -32,7 +32,6 @@ module.exports = router;
  *         - hotel
  *         - number
  *         - price
- *         - unavailablePeriod
  *       properties:
  *         id:
  *           type: string
@@ -44,16 +43,17 @@ module.exports = router;
  *         type:
  *           type: string
  *           enum: [standard, superior, deluxe, suite]
+ *           default: standard
  *           description: Type of room
  *         number:
  *           type: number
  *           description: Room number
  *         price:
  *           type: number
- *           description: Room price
+ *           description: Room price per night
  *         unavailablePeriod:
  *           type: array
- *           description: Date ranges when the room is unavailable
+ *           description: List of unavailable date ranges
  *           items:
  *             type: object
  *             properties:
@@ -82,14 +82,14 @@ module.exports = router;
  *     tags: [Rooms]
  *     responses:
  *       200:
- *         description: List of all rooms
+ *         description: A list of all rooms
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Room'
- * 
+
  *   post:
  *     summary: Create a new room
  *     tags: [Rooms]
@@ -108,17 +108,19 @@ module.exports = router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Room'
+ *       400:
+ *         description: Invalid input
  *       401:
  *         description: Unauthorized - Token required
  *       403:
- *         description: Forbidden - Not authorized
+ *         description: Forbidden - Insufficient permissions
  */
 
 /**
  * @swagger
  * /rooms/{id}:
  *   get:
- *     summary: Get room by ID
+ *     summary: Get a specific room by ID
  *     tags: [Rooms]
  *     parameters:
  *       - in: path
@@ -129,14 +131,14 @@ module.exports = router;
  *         description: The room ID
  *     responses:
  *       200:
- *         description: Room found
+ *         description: Room details
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Room'
  *       404:
  *         description: Room not found
- * 
+
  *   put:
  *     summary: Update a room
  *     tags: [Rooms]
@@ -162,13 +164,15 @@ module.exports = router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Room'
+ *       400:
+ *         description: Invalid data
  *       401:
  *         description: Unauthorized - Token required
  *       403:
  *         description: Forbidden - Not authorized
  *       404:
  *         description: Room not found
- * 
+
  *   delete:
  *     summary: Delete a room
  *     tags: [Rooms]
