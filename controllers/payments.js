@@ -243,10 +243,11 @@ exports.updatePayment = async (req, res) => {
                 });
             }
 
-            payment.amount = amount || payment.amount;
-            payment.method = method || payment.method;    
         }
-
+        
+        payment.amount = amount || payment.amount;
+        payment.method = method || payment.method;  
+          
         await payment.save(); 
 
         res.status(200).json({
