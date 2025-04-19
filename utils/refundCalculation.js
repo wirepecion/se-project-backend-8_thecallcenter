@@ -43,6 +43,10 @@ exports.refundCalculation = (CheckInDate, CheckOutDate, CancellationDate, paymen
                 refundPercent = 0.00
             }
 
+        } else {
+
+            refundPercent = -1 // impossible
+
         }
     }
 

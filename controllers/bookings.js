@@ -426,6 +426,14 @@ exports.updateBooking = async(req,res,next) => {
             
             //TODO US2-3 - BE - Create: update booking status on cancellation
             
+            if (refund < 0) {
+                console.warn(`[REFUND] Refund rejected for Booking ID: ${req.params.id}. Stay duration does not meet our policy — only exactly 1, 2, or 3 days are eligible.`);
+
+                return res.status(400).json({
+                    success: false,
+                    message: 'Refund denied. Stay duration does not meet our policy.'
+                });
+            }
             
             if (refund > 0) {
                 booking.status = status;
