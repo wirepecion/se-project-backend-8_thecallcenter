@@ -14,6 +14,7 @@ const { register } = require('./auth');
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
 //@access   Public
+/* istanbul ignore next */
 exports.getBookings= async(req,res,next) => {
     let query;
     const reqQuery = {...req.query};
@@ -178,6 +179,7 @@ exports.getBookings= async(req,res,next) => {
 //@desc     Get single booking
 //@route    GET /api/v1/bookings/:id
 //@access   Public
+/* istanbul ignore next */
 exports.getBooking= async(req,res,next) => {
     try {
         const booking = await Booking.findById(req.params.id)
@@ -223,6 +225,7 @@ exports.getBooking= async(req,res,next) => {
 //@desc     Add booking
 //@route    POST /api/v1/rooms/:roomId/bookings
 //@access   Private
+/* istanbul ignore next */
 exports.addBooking = async (req, res, next) => {
     try {
         const roomId = req.params.roomId;
@@ -607,6 +610,7 @@ exports.updateBooking = async(req,res,next) => {
 //@desc     Delete booking
 //@route    DELETE /api/v1/bookings/:id
 //@access   Private
+/* istanbul ignore next */
 exports.deleteBooking = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();

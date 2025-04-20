@@ -4,7 +4,10 @@
   "description": "supportthisgroupplease",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test-coverage": "jest --coverage",
+    "test-update-booking": "jest --coverage --collectCoverageFrom='controllers/bookings.js'",
+    "test-update-payment": "jest --coverage --collectCoverageFrom='controllers/payments.js'",
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
@@ -29,6 +32,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.9"
   }
 }
