@@ -271,6 +271,7 @@ exports.updatePayment = async (req, res) => {
 exports.deletePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
+        const user = req.user;
 
         if (!payment) {
             return res.status(404).json({
