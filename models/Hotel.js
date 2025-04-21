@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const membershipEnum = ['none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
+const membershipEnum = ['unavailable','none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
 const facilitiesSchema = new mongoose.Schema({
         swimmingPool: { type: String, enum: membershipEnum, required: true },
@@ -46,6 +46,18 @@ const HotelSchema = new mongoose.Schema({
     },
 
     facilities: { type: facilitiesSchema, required: true },
+
+    subscriptionRank: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 5
+    },
+
+    viewStatistics: {
+        type: Number,
+        default: 0
+    },
 
 },
 {
