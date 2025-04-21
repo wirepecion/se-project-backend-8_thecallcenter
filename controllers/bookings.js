@@ -255,14 +255,6 @@ exports.addBooking = async (req, res, next) => {
             });
         }
 
-        // Payment method validation
-        // if (!paymentMethod) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'Payment method is required.',
-        //     });
-        // }
-
         // Step 2: Fetch room and check availability
         const room = await Room.findById(roomId);
 
@@ -294,6 +286,8 @@ exports.addBooking = async (req, res, next) => {
             });
         }
 
+        const user = await User.findById(userId);
+
         // Step 3: Create the booking
         const booking = new Booking({
             user: userId,
@@ -301,6 +295,7 @@ exports.addBooking = async (req, res, next) => {
             hotel: room.hotel,
             checkInDate: newCheckInDate,
             checkOutDate: newCheckOutDate,
+            tierAtBooking: user.membershipTier,
         });
         await booking.save(); // Save booking
 
@@ -312,6 +307,8 @@ exports.addBooking = async (req, res, next) => {
 
         // Save the updated room with the new unavailable period
         await room.save();
+
+        
 
         // Step 5: Process payment
         const payment = new Payment({
