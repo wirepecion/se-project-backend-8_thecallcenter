@@ -20,7 +20,12 @@ const HotelSchema = new mongoose.Schema({
     
     picture:{
         type: String
+    },
+
+    facilities:{
+        type: [object],
     }
+
 },
 {
     toJSON: {virtuals:true},
