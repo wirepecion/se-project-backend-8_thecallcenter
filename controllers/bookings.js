@@ -255,14 +255,6 @@ exports.addBooking = async (req, res, next) => {
             });
         }
 
-        // Payment method validation
-        // if (!paymentMethod) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'Payment method is required.',
-        //     });
-        // }
-
         // Step 2: Fetch room and check availability
         const room = await Room.findById(roomId);
 
@@ -294,6 +286,8 @@ exports.addBooking = async (req, res, next) => {
             });
         }
 
+        const user = await User.findById(userId);
+
         // Step 3: Create the booking
         const booking = new Booking({
             user: userId,
@@ -301,6 +295,7 @@ exports.addBooking = async (req, res, next) => {
             hotel: room.hotel,
             checkInDate: newCheckInDate,
             checkOutDate: newCheckOutDate,
+            tierAtBooking: user.membershipTier,
         });
         await booking.save(); // Save booking
 
@@ -312,6 +307,8 @@ exports.addBooking = async (req, res, next) => {
 
         // Save the updated room with the new unavailable period
         await room.save();
+
+        
 
         // Step 5: Process payment
         const payment = new Payment({
@@ -493,7 +490,7 @@ exports.updateBooking = async(req,res,next) => {
                 });
             }
 
-        } else if (status && [ 'confirmed', 'checkedIn', 'completed'].includes(status)){
+        } else if (status && [ 'confirmed', 'checkedIn'].includes(status)){
             if (user.role === 'user') {
 
                 console.warn(`[SECURITY] Customer ['${user.id}'] attempted to update booking status to '${status}' (not allowed). Booking ID: ${req.params.id}`);
@@ -506,6 +503,24 @@ exports.updateBooking = async(req,res,next) => {
 
             booking.status = status;
             console.log(`[BOOKING] ${user.role} ['${user.id}'] successfully updated booking status to '${status}'. Booking ID: ${req.params.id}`);
+        } else if (status && status === 'completed') {
+            if (user.role === 'user') {
+                console.warn(`[SECURITY] Customer ['${user.id}'] attempted to update booking status to '${status}' (not allowed). Booking ID: ${req.params.id}`);
+                return res.status(403).json({
+                    success: false,
+                    message: `You are not allowed to update the booking status to '${status}'`
+                });
+            }
+                
+            booking.status = status;                
+            console.log(`[BOOKING] ${user.role} ['${user.id}'] successfully updated booking status to '${status}'. Booking ID: ${req.params.id}`);
+
+            //TODO US1-3 BE: (update booking controller) updating membership point after complete booking logic
+
+
+
+            //---------------------------------------------------------------------------------
+
         } else if (status) {
             console.warn(`[VALIDATION] ${user.role} ['${user.id}'] attempted to set invalid booking status to '${status}'. Booking ID: ${req.params.id}`);
 

@@ -1,27 +1,23 @@
 const mongoose = require('mongoose');
-const membershipEnum = ['none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
+const membershipEnum = ['unavailable','none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
-const facilitiesSchema = new mongoose.Schema({
-        swimmingPool: { type: String, enum: membershipEnum, required: true },
-        carPark: { type: String, enum: membershipEnum, required: true },
-        gym: { type: String, enum: membershipEnum, required: true },
-        breakfast: { type: String, enum: membershipEnum, required: true },
-        spa: { type: String, enum: membershipEnum, required: true },
-        wifi: { type: String, enum: membershipEnum, required: true },
-        roomService: { type: String, enum: membershipEnum, required: true },
-        airportShuttle: { type: String, enum: membershipEnum, required: true },
-        restaurant: { type: String, enum: membershipEnum, required: true },
-        bar: { type: String, enum: membershipEnum, required: true },
-        laundry: { type: String, enum: membershipEnum, required: true },
-        kidsClub: { type: String, enum: membershipEnum, required: true },
-        petFriendly: { type: String, enum: membershipEnum, required: true },
-        businessCenter: { type: String, enum: membershipEnum, required: true },
-        meetingRooms: { type: String, enum: membershipEnum, required: true },
-        beachAccess: { type: String, enum: membershipEnum, required: true },
-        valetParking: { type: String, enum: membershipEnum, required: true },
-        rooftopLounge: { type: String, enum: membershipEnum, required: true },
+const facilityItemSchema = new mongoose.Schema({
+    name: {
+      type: String,
+      enum: [
+        'swimmingPool', 'carPark', 'gym', 'breakfast', 'spa',
+        'wifi', 'roomService', 'airportShuttle', 'restaurant', 'bar',
+        'laundry', 'kidsClub', 'petFriendly', 'businessCenter',
+        'meetingRooms', 'beachAccess', 'valetParking', 'rooftopLounge'
+      ],
+      required: true
+    },
+    rank: {
+      type: String,
+      enum: membershipEnum, // e.g. ['none', 'silver', 'gold', 'platinum']
+      required: true
+    }
   }, { _id: false });
-
   
 const HotelSchema = new mongoose.Schema({
     name: {
@@ -45,7 +41,22 @@ const HotelSchema = new mongoose.Schema({
         type: String
     },
 
-    facilities: { type: facilitiesSchema, required: true },
+    facilities: {
+        type: [facilityItemSchema],
+        required: true
+    },
+
+    subscriptionRank: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 5
+    },
+
+    viewStatistics: {
+        type: Number,
+        default: 0
+    },
 
 },
 {
