@@ -402,69 +402,88 @@ exports.updateBooking = async(req,res,next) => {
             }
         } else if (status && status === 'canceled') {
             try {
-            //TODO US2-3 - BE - Create: implement refund logic
-            if(![ 'confirmed', 'checkedIn'].includes(booking.status)){
-                return res.status(400).json({
-                    success: false,
-                    message: 'Booking cannot be canceled at this stage.'
+
+                //TODO US2-3 - BE - Create: implement refund logic
+                if(![ 'confirmed', 'checkedIn'].includes(booking.status)){
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Booking cannot be canceled at this stage.'
+                    });
+                }
+                
+                const payment = await Payment.findOne({
+                    booking: req.params.id,
+                    status: 'completed'
                 });
-            }
-            
-            const payment = await Payment.findOne({
-                booking: req.params.id,
-                status: 'completed'
-            });
 
-            if (!payment) {
-                console.warn(`[PAYMENT] No completed payment found for Booking ID: ${req.params.id}`);
-                return res.status(400).json({
-                    success: false,
-                    message: 'No completed payment found for refund.'
-                });
-            }
-    
-            const paymentPrice = payment.amount;
+                if (!payment) {
+                    console.warn(`[PAYMENT] No completed payment found for Booking ID: ${req.params.id}`);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'No completed payment found for refund.'
+                    });
+                }
+        
+                const paymentPrice = payment.amount;
 
-            let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), paymentPrice); 
-            
-            //TODO US2-3 - BE - Create: update booking status on cancellation
-            
-            if (refund < 0) {
-                console.warn(`[REFUND] Refund rejected for Booking ID: ${req.params.id}. Stay duration does not meet our policy — only exactly 1, 2, or 3 days are eligible.`);
+                let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), paymentPrice); 
+                
+                //TODO US2-3 - BE - Create: update booking status on cancellation
+                
+                if (refund < 0) {
+                    console.warn(`[REFUND] Refund rejected for Booking ID: ${req.params.id}. Stay duration does not meet our policy — only exactly 1, 2, or 3 days are eligible.`);
 
-                return res.status(400).json({
-                    success: false,
-                    message: 'Refund denied. Stay duration does not meet our policy.'
-                });
-            }
-            
-            if (refund > 0) {
-                booking.status = status;
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Refund denied. Stay duration does not meet our policy.'
+                    });
+                }
+                
+                if (refund > 0) {
+                    booking.status = status;
 
-                payment.status = 'canceled';
-                await payment.save();
+                    payment.status = 'canceled';
+                    await payment.save();
 
-                await User.findByIdAndUpdate(
-                    booking.user,
-                    { $inc: { credit: refund } }
-                );
-            
-                //TODO US2-3 - BE - Create: log refund attempt and outcome
-                console.log(`[REFUND] Refund processed successfully for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`);
-                logCreation( user.id, 'REFUND', `Refund processed for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`,);
-            } else {
-                //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
-                console.warn(`[REFUND] Refund failed for Booking ID: ${req.params.id}. No refundable amount available.`);
+                    await User.findByIdAndUpdate(
+                        booking.user,
+                        { $inc: { credit: refund } }
+                    );
+                
+                    //TODO US2-3 - BE - Create: log refund attempt and outcome
+                    console.log(`[REFUND] Refund processed successfully for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`);
+                    logCreation( user.id, 'REFUND', `Refund processed for Booking ID: ${req.params.id}. Amount refunded: ${refund} THB`,);
 
-                return res.status(400).json({
-                    success: false,
-                    message: 'Refund failed. No refundable amount available.'
-                });
-            }
+                    // Update room's unavailablePeriod
+                    const room = await Room.findById(booking.room)
 
-            //TODO US2-3 - BE - Create: send email/notification when refund is processed
-            const userInfo = await User.findById(user.id)
-            sendRefund( userInfo.email, userInfo.name, req.params.id, refund)
+                    const checkInDate = new Date(booking.checkInDate).toISOString
+                    const checkOutDate = new Date(booking.checkOutDate).toISOString
+
+                    // Remove the period from unavailablePeriod array if it matches the booking's dates
+                    room.unavailablePeriod = room.unavailablePeriod.filter((period) => {
+                        return !(
+                            new Date(period.startDate).toISOString === checkInDate &&
+                            new Date(period.endDate).toISOString === checkOutDate
+                        );
+                    });
+
+                    // Save the updated room document
+                    await room.save();
+
+                } else {
+                    //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
+                    console.warn(`[REFUND] Refund failed for Booking ID: ${req.params.id}. No refundable amount available.`);
+
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Refund failed. No refundable amount available.'
+                    });
+                }
+
+                //TODO US2-3 - BE - Create: send email/notification when refund is processed
+                const userInfo = await User.findById(user.id)
+                sendRefund( userInfo.email, userInfo.name, req.params.id, refund)
 
             } catch (err) {
                 console.error(`[ERROR] Refund process failed for Booking ID: ${req.params.id}.`, err);
@@ -473,8 +492,6 @@ exports.updateBooking = async(req,res,next) => {
                     message: 'An error occurred during the refund process.'
                 });
             }
-
-            
 
         } else if (status && [ 'confirmed', 'checkedIn', 'completed'].includes(status)){
             if (user.role === 'user') {
@@ -564,34 +581,37 @@ exports.updateBooking = async(req,res,next) => {
 
         await booking.save(); //change from findbyID to save directly becuase we alreay find it leaw.
 
-        // Step 1: Find the associated Room
-        const room = await Room.findById(booking.room);
+        if (!(status && status === 'canceled')) {
+            // Step 1: Find the associated Room
+            const room = await Room.findById(booking.room);
 
-        if (!room) {
-            return res.status(404).json({
-                success: false,
-                message: 'Room not found for this booking.',
+            if (!room) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Room not found for this booking.',
+                });
+            }
+
+            // Step 2: Remove the previous unavailable period for the booking
+            const oldUnavailablePeriodIndex = room.unavailablePeriod.findIndex((period) =>
+                period.startDate <= booking.checkOutDate && period.endDate >= booking.checkInDate
+            );
+
+            if (oldUnavailablePeriodIndex > -1) {
+                room.unavailablePeriod.splice(oldUnavailablePeriodIndex, 1);
+            }
+
+            // Step 3: Add the new unavailable period
+            room.unavailablePeriod.push({
+                startDate: new Date(booking.checkInDate),
+                endDate: new Date(booking.checkOutDate),
             });
+
+            // Step 4: Save the room with the updated unavailablePeriod
+            await room.save();
+
         }
-
-        // Step 2: Remove the previous unavailable period for the booking
-        const oldUnavailablePeriodIndex = room.unavailablePeriod.findIndex((period) =>
-            period.startDate <= booking.checkOutDate && period.endDate >= booking.checkInDate
-        );
-
-        if (oldUnavailablePeriodIndex > -1) {
-            room.unavailablePeriod.splice(oldUnavailablePeriodIndex, 1);
-        }
-
-        // Step 3: Add the new unavailable period
-        room.unavailablePeriod.push({
-            startDate: new Date(booking.checkInDate),
-            endDate: new Date(booking.checkOutDate),
-        });
-
-        // Step 4: Save the room with the updated unavailablePeriod
-        await room.save();
-
+        
         res.status(200).json({
             success:true, 
             data:booking
