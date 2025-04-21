@@ -11,6 +11,8 @@ const User = require('../models/User');
 const { sendRefund } = require('../utils/sendEmails');
 const { register } = require('./auth');
 
+const nights = 24 * 60 * 60 * 1000;
+
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
 //@access   Public
@@ -247,7 +249,7 @@ exports.addBooking = async (req, res, next) => {
         }
 
         // Users can book up to 3 nights, but admins can book more
-        const maxNights = 3 * 24 * 60 * 60 * 1000; 
+        const maxNights = 3 * nights; 
         if (newCheckOutDate - newCheckInDate > maxNights && req.user.role !== 'admin') {
             return res.status(400).json({
                 success: false,
@@ -350,6 +352,7 @@ exports.addBooking = async (req, res, next) => {
 exports.updateBooking = async(req,res,next) => {
     try {
         let booking = await Booking.findById(req.params.id);
+        const user = req.user;
 
         if (!booking) {
             return res.status(404).json({
@@ -358,24 +361,22 @@ exports.updateBooking = async(req,res,next) => {
             });
         }
 
-        //Make sure the user is the booking owner
-        if ((req.user.role === 'user' && booking.user.toString() !== req.user.id )
-            || (req.user.role === 'hotelManager' && booking.hotel.toString() !== req.user.responsibleHotel )) {
+        // Make sure the user is the booking owner or the hotel manager is the booking hotel owner
+        if ((user.role === 'user' && booking.user.toString() !== user.id )
+            || (user.role === 'hotelManager' && booking.hotel.toString() !== user.responsibleHotel )) {
 
-            console.warn(`[SECURITY] User ['${req.user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
-            logCreation( req.user.id, 'SECURITY', `${register.user.role} ['${req.user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
+            console.warn(`[SECURITY] User ['${user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
+            logCreation( user.id, 'SECURITY', `${register.user.role} ['${user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
 
             return res.status(401).json({
                 success:false,
-                message: `User ${req.user.id} is not authorized to update this booking`
+                message: `User ${user.id} is not authorized to update this booking`
             });
         }
 
-        //Check if check-in or check-out dates are being updated
         const { checkInDate, checkOutDate, status } = req.body;
-        const user = req.user;
 
-        if (status !== undefined && (checkInDate !== undefined || checkOutDate !== undefined)) {
+        if (status && (checkInDate || checkOutDate)) {
             console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${checkInDate ? 'amount' : ''}${checkInDate && checkOutDate ? ' and ' : ''}${checkOutDate ? 'method' : ''}' in the same request. Not allowed. Booking ID: ${req.params.id}`);
 
             return res.status(400).json({
@@ -384,59 +385,76 @@ exports.updateBooking = async(req,res,next) => {
             });
         }
 
-        if (status && status === 'pending') {
-            if(user.role !== 'admin') {
-                console.warn(`[SECURITY] ${user.role} ['${user.id}'] attempted to set booking status to 'pending' (not allowed). Booking ID: ${req.params.id}`);
+        if (status) {
 
-                return res.status(400).json({
-                    success: false,
-                    message: `Cannot update the booking status to 'pending' as the user is not an admin.`
-                });
-                
-            } else {
-                booking.status = status;
-                console.log(`[BOOKING] Admin['${user.id}'] successfully set booking status to 'unpaid'. Booking ID: ${req.params.id}`);
-            }
-        } else if (status && status === 'canceled') {
-            try {
+            if (status === 'pending') {
 
-                //TODO US2-3 - BE - Create: implement refund logic
-                if(![ 'confirmed', 'checkedIn'].includes(booking.status)){
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Booking cannot be canceled at this stage.'
-                    });
-                }
-                
-                const payment = await Payment.findOne({
-                    booking: req.params.id,
-                    status: 'completed'
-                });
-
-                if (!payment) {
-                    console.warn(`[PAYMENT] No completed payment found for Booking ID: ${req.params.id}`);
-                    return res.status(400).json({
-                        success: false,
-                        message: 'No completed payment found for refund.'
-                    });
-                }
-        
-                const paymentPrice = payment.amount;
-
-                let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), paymentPrice); 
-                
-                //TODO US2-3 - BE - Create: update booking status on cancellation
-                
-                if (refund < 0) {
-                    console.warn(`[REFUND] Refund rejected for Booking ID: ${req.params.id}. Stay duration does not meet our policy — only exactly 1, 2, or 3 days are eligible.`);
+                if (user.role !== 'admin') {
+                    console.warn(`[SECURITY] ${user.role} ['${user.id}'] attempted to set booking status to 'pending' (not allowed). Booking ID: ${req.params.id}`);
 
                     return res.status(400).json({
                         success: false,
-                        message: 'Refund denied. Stay duration does not meet our policy.'
+                        message: `Cannot update the booking status to 'pending' as the user is not an admin.`
                     });
+                    
+                } else {
+                    booking.status = status;
+                    console.log(`[BOOKING] Admin['${user.id}'] successfully set booking status to 'pending'. Booking ID: ${req.params.id}`);
                 }
-                
-                if (refund > 0) {
+
+            } else if (status === 'canceled') {
+
+                try {
+
+                    //TODO US2-3 - BE - Create: implement refund logic
+                    if (![ 'confirmed', 'checkedIn' ].includes(booking.status)){
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Booking cannot be canceled at this stage.'
+                        });
+                    }
+                    
+                    const payment = await Payment.findOne({
+                        booking: req.params.id,
+                        status: 'completed'
+                    });
+    
+                    if (!payment) {
+                        console.warn(`[PAYMENT] No completed payment found for Booking ID: ${req.params.id}`);
+                        return res.status(400).json({
+                            success: false,
+                            message: 'No completed payment found for refund.'
+                        });
+                    }
+            
+                    const paymentPrice = payment.amount;
+    
+                    let refund = refundCalculation(booking.checkInDate, booking.checkOutDate, new Date(), paymentPrice); 
+                    
+                    //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
+                    if (refund <= 0) {
+                        
+                        const messages = {
+                            negative: 'Refund denied. Stay duration does not meet our policy.',
+                            zero: 'Refund failed. No refundable amount available.'
+                        };
+                        
+                        const logMessages = {
+                            negative: `[REFUND] Refund rejected for Booking ID: ${req.params.id}. Stay duration does not meet our policy — only exactly 1, 2, or 3 nights are eligible.`,
+                            zero: `[REFUND] Refund failed for Booking ID: ${req.params.id}. No refundable amount available.`
+                        };
+                        
+                        const type = refund < 0 ? 'negative' : 'zero';
+                        console.warn(logMessages[type]);
+                        
+                        return res.status(400).json({
+                            success: false,
+                            message: messages[type]
+                        });
+                        
+                    }
+                    
+                    //TODO US2-3 - BE - Create: update booking status on cancellation
                     booking.status = status;
 
                     payment.status = 'canceled';
@@ -468,74 +486,60 @@ exports.updateBooking = async(req,res,next) => {
                     // Save the updated room document
                     await room.save();
 
-                } else {
-                    //TODO US2-3 - BE - Create: add alert to display deny message when refund is failed
-                    console.warn(`[REFUND] Refund failed for Booking ID: ${req.params.id}. No refundable amount available.`);
-
-                    return res.status(400).json({
+                    //TODO US2-3 - BE - Create: send email/notification when refund is processed
+                    const userInfo = await User.findById(user.id)
+                    sendRefund(userInfo.email, userInfo.name, req.params.id, refund)
+    
+                } catch (err) {
+                    console.error(`[ERROR] Refund process failed for Booking ID: ${req.params.id}.`, err);
+                    return res.status(500).json({
                         success: false,
-                        message: 'Refund failed. No refundable amount available.'
+                        message: 'An error occurred during the refund process.'
                     });
                 }
 
-                //TODO US2-3 - BE - Create: send email/notification when refund is processed
-                const userInfo = await User.findById(user.id)
-                sendRefund( userInfo.email, userInfo.name, req.params.id, refund)
+            } else if ([ 'confirmed', 'checkedIn', 'completed' ].includes(status)) {
 
-            } catch (err) {
-                console.error(`[ERROR] Refund process failed for Booking ID: ${req.params.id}.`, err);
-                return res.status(500).json({
+                if (user.role === 'user') {
+
+                    console.warn(`[SECURITY] Customer ['${user.id}'] attempted to update booking status to '${status}' (not allowed). Booking ID: ${req.params.id}`);
+    
+                    return res.status(403).json({
+                        success: false,
+                        message: `You are not allowed to update the booking status to '${status}'`
+                    });
+                }
+    
+                booking.status = status;
+                console.log(`[BOOKING] ${user.role} ['${user.id}'] successfully updated booking status to '${status}'. Booking ID: ${req.params.id}`);
+    
+                if (status === 'completed') {
+    
+                    //TODO US1-3 BE: (update booking controller) updating membership point after complete booking logic
+    
+    
+    
+                    //---------------------------------------------------------------------------------
+    
+                }
+
+            } else { // status is invalid
+
+                console.warn(`[VALIDATION] ${user.role} ['${user.id}'] attempted to set invalid booking status to '${status}'. Booking ID: ${req.params.id}`);
+    
+                return res.status(400).json({
                     success: false,
-                    message: 'An error occurred during the refund process.'
+                    message: 'Invalid booking status. Allowed values: pending, confirmed, canceled, checkedIn, completed.'
                 });
+
             }
 
-        } else if (status && [ 'confirmed', 'checkedIn'].includes(status)){
-            if (user.role === 'user') {
+        } else if (checkInDate || checkOutDate) {
 
-                console.warn(`[SECURITY] Customer ['${user.id}'] attempted to update booking status to '${status}' (not allowed). Booking ID: ${req.params.id}`);
+            let newCheckInDate = checkInDate ? new Date(checkInDate) : booking.checkInDate;
+            let newCheckOutDate = checkOutDate ? new Date(checkOutDate) : booking.checkOutDate;
 
-                return res.status(403).json({
-                    success: false,
-                    message: `You are not allowed to update the booking status to '${status}'`
-                });
-            }
-
-            booking.status = status;
-            console.log(`[BOOKING] ${user.role} ['${user.id}'] successfully updated booking status to '${status}'. Booking ID: ${req.params.id}`);
-        } else if (status && status === 'completed') {
-            if (user.role === 'user') {
-                console.warn(`[SECURITY] Customer ['${user.id}'] attempted to update booking status to '${status}' (not allowed). Booking ID: ${req.params.id}`);
-                return res.status(403).json({
-                    success: false,
-                    message: `You are not allowed to update the booking status to '${status}'`
-                });
-            }
-                
-            booking.status = status;                
-            console.log(`[BOOKING] ${user.role} ['${user.id}'] successfully updated booking status to '${status}'. Booking ID: ${req.params.id}`);
-
-            //TODO US1-3 BE: (update booking controller) updating membership point after complete booking logic
-
-
-
-            //---------------------------------------------------------------------------------
-
-        } else if (status) {
-            console.warn(`[VALIDATION] ${user.role} ['${user.id}'] attempted to set invalid booking status to '${status}'. Booking ID: ${req.params.id}`);
-
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid booking status. Allowed values: pending, confirmed, canceled, checkedIn, completed.'
-            });
-        }
-
-
-        if (checkInDate && checkOutDate) {
-            const newCheckInDate = new Date(checkInDate);
-            const newCheckOutDate = new Date(checkOutDate);
-
-            //Check-out date must be after the check-in date
+            // Check-out date must be after the check-in date
             if (newCheckOutDate <= newCheckInDate) {
                 return res.status(400).json({
                     success: false,
@@ -543,61 +547,16 @@ exports.updateBooking = async(req,res,next) => {
                 });
             }
 
-            //If the user is not an admin, they can only book up to 3 nights
-            if (newCheckOutDate - newCheckInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+            // Max 3-night limit
+            const duration = newCheckOutDate - newCheckInDate;
+            if (duration > 3 * nights) {
                 return res.status(400).json({
                     success: false,
                     message: 'User can only book up to 3 nights.'
                 });
             }
 
-            booking.checkInDate = newCheckInDate;
-            booking.checkOutDate = newCheckOutDate;
-        } else if (checkInDate && !checkOutDate) {
-            const newCheckInDate = new Date(checkInDate);
-
-            //Check-out date must be after the check-in date
-            if (booking.checkOutDate <= newCheckInDate) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Check-out date must be after check-in date.'
-                });
-            }
-
-            //If the user is not an admin, they can only book up to 3 nights
-            if (booking.checkOutDate - newCheckInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'User can only book up to 3 nights.'
-                });
-            }
-            booking.checkInDate = newCheckInDate;
-        } else if (!checkInDate && checkOutDate) {
-            const newCheckOutDate = new Date(checkOutDate);
-
-            //Check-out date must be after the check-in date
-            if (newCheckOutDate <= booking.checkInDate) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Check-out date must be after check-in date.'
-                });
-            }
-
-            //If the user is not an admin, they can only book up to 3 nights
-            if (newCheckOutDate - booking.checkInDate > 3 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'User can only book up to 3 nights.'
-                });
-            }
-
-            booking.checkOutDate = newCheckOutDate;
-        }
-
-        await booking.save(); //change from findbyID to save directly becuase we alreay find it leaw.
-
-        if (!(status && status === 'canceled')) {
-            // Step 1: Find the associated Room
+            // Find the associated Room
             const room = await Room.findById(booking.room);
 
             if (!room) {
@@ -607,7 +566,7 @@ exports.updateBooking = async(req,res,next) => {
                 });
             }
 
-            // Step 2: Remove the previous unavailable period for the booking
+            // Remove the previous unavailable period for the booking
             const oldUnavailablePeriodIndex = room.unavailablePeriod.findIndex((period) =>
                 period.startDate <= booking.checkOutDate && period.endDate >= booking.checkInDate
             );
@@ -616,16 +575,22 @@ exports.updateBooking = async(req,res,next) => {
                 room.unavailablePeriod.splice(oldUnavailablePeriodIndex, 1);
             }
 
-            // Step 3: Add the new unavailable period
+            // Add the new unavailable period
             room.unavailablePeriod.push({
-                startDate: new Date(booking.checkInDate),
-                endDate: new Date(booking.checkOutDate),
+                startDate: new Date(newCheckInDate),
+                endDate: new Date(newCheckOutDate),
             });
 
-            // Step 4: Save the room with the updated unavailablePeriod
+            // Save the room with the updated unavailablePeriod
             await room.save();
 
-        }
+            // Apply changes
+            booking.checkInDate = newCheckInDate;
+            booking.checkOutDate = newCheckOutDate;
+
+        } 
+
+        await booking.save();
         
         res.status(200).json({
             success:true, 
@@ -668,11 +633,11 @@ exports.deleteBooking = async (req, res, next) => {
             });
         }
 
-        // User must delete the booking at least 7 days before the check-in date
-        if (booking.bookingDate - Date.now() < 7 * 24 * 60 * 60 * 1000 && req.user.role !== 'admin') {
+        // User must delete the booking at least 7 nights before the check-in date
+        if (booking.bookingDate - Date.now() < 7 * nights && req.user.role !== 'admin') {
             return res.status(400).json({
                 success: false,
-                message: 'The user must cancel the booking at least 7 days before the check-in date',
+                message: 'The user must cancel the booking at least 7 nights before the check-in date',
             });
         }
 
