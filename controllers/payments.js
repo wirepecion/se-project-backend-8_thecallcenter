@@ -183,13 +183,14 @@ exports.updatePayment = async (req, res) => {
                 payment.status = status;
                 //log for setting payment status to unpaid
                 console.log(`[PAYMENT] Admin['${user.id}'] successfully set payment status to 'unpaid'. Payment ID: ${payment.id}`);
+                sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
                 logCreation(user.id,'PAYMENT', `[${user.role}] set payment status to 'unpaid' for booking ID: ${payment.booking} `)
 
             }
         } else if (status && status === 'pending') {
             payment.status = status;
             sendNewPayment(user.email, user.name, payment.booking);
-             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
+            console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
@@ -271,6 +272,7 @@ exports.updatePayment = async (req, res) => {
 exports.deletePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
+        const user = req.user;
 
         if (!payment) {
             return res.status(404).json({
