@@ -104,3 +104,46 @@ exports.logout = async (req, res, next) => {
         data: {}
     });
 };
+
+//@desc     get all users
+//@route    GET /api/v1/auth/users
+//@access   Private
+exports.getUsers = async (req, res, next) => {
+    //TODO: TJ - Add pagination and filtering
+    
+    const query = await User.find();
+
+    const statistic = await User.aggregate([
+        {
+            $group: {
+                _id: "$membershipTier",
+                totalUsers: { $sum: 1 },
+            }
+        }
+    ]);
+    
+
+    res.status(200).json({
+        success: true,
+        count: query.length,
+        statistic: statistic,
+        data: query
+    });
+}
+
+//@desc     get one user
+//@route    GET /api/v1/auth/users/:id
+//@access   Private
+exports.getUser = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.id).populate({path: 'responsibleHotel', select: 'name'});
+
+        if (!user) {
+            return res.status(400).json({success:false});
+        }
+
+        res.status(200).json({success:true, data:user});
+    } catch (err) {
+        res.status(400).json({success:false});
+    }
+};
