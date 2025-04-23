@@ -45,6 +45,17 @@ const UserSchema=new mongoose.Schema({
         default: 0
     },
 
+    membershipTier:{
+        type: String,
+        enum: ['none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'],
+        default: 'none'
+    },
+
+    membershipPoints:{
+        type: Number,
+        default: 0
+    },
+
     responsibleHotel:{
         type: mongoose.Schema.ObjectId,
         ref: 'Hotel'

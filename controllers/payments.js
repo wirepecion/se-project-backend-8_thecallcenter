@@ -150,6 +150,12 @@ exports.updatePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
 
+        //data for send email
+        const booking = await Booking.findById(payment.booking)
+        const hotel = await Hotel.findById(booking.hotel)
+        const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+        const customer = await User.findById(payment.user)
+
         if (!payment) {
             return res.status(404).json({
                 success: false,
@@ -183,13 +189,14 @@ exports.updatePayment = async (req, res) => {
                 payment.status = status;
                 //log for setting payment status to unpaid
                 console.log(`[PAYMENT] Admin['${user.id}'] successfully set payment status to 'unpaid'. Payment ID: ${payment.id}`);
+                sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
                 logCreation(user.id,'PAYMENT', `[${user.role}] set payment status to 'unpaid' for booking ID: ${payment.booking} `)
 
             }
         } else if (status && status === 'pending') {
             payment.status = status;
             sendNewPayment(user.email, user.name, payment.booking);
-             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
+            console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
@@ -201,14 +208,9 @@ exports.updatePayment = async (req, res) => {
                     message: `You are not allowed to update the payment status to '${status}'`
                 });
             }
-            const booking = await Booking.findById(payment.booking)
             if (user.role === 'admin') {
                 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
-                const booking = await Booking.findById(payment.booking)
-                const hotel = await Hotel.findById(booking.hotel)
-                const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
-                const customer = await User.findById(payment.user)
                 sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
             

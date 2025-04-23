@@ -36,6 +36,13 @@ const BookingSchema = new mongoose.Schema({
         default: 'pending'
     },
 
+    tierAtBooking: {
+        type: String,
+        enum: ['none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'],
+        default: 'none',
+        required: true
+    },
+
     createdAt: {
         type: Date,
         default: Date.now

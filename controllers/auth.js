@@ -6,7 +6,7 @@ const User = require('../models/User');
 
 exports.register = async (req, res, next) => {
     try {
-        const { name, tel, email, password, role, responsibleHotel, credit } = req.body;
+        const { name, tel, email, password, role, responsibleHotel, } = req.body;
 
         //Create user
         const user = await User.create({
@@ -16,7 +16,7 @@ exports.register = async (req, res, next) => {
             password,
             role, 
             responsibleHotel, 
-            credit
+            
         });
 
         sendTokenResponse(user, 200, res);
@@ -82,7 +82,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 //@desc     Get current logged in user
 //@route    GET /api/v1/auth/me
 //@access   Private
-exports.getMe = async (req, res, next) => {
+exports.getMe = async (req, res) => {
     const user = await User.findById(req.user.id);
     res.status(200).json({
         success: true, 
@@ -104,6 +104,8 @@ exports.logout = async (req, res, next) => {
         data: {}
     });
 };
+
+
 
 //@desc     get all users
 //@route    GET /api/v1/auth/users
