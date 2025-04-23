@@ -106,6 +106,41 @@ exports.logout = async (req, res, next) => {
 };
 
 
+//@desc Reduce user credit
+//@route POST /api/v1/auth/reduceCredit
+//@access Private
+exports.reduceCredit = async (req, res, next) => {
+    try {
+        const { amount } = req.body;
+        const userId = req.body.user || req.user.id;
+        const user = await User.findById(userId);
+
+        if (req.body.userId && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Forbidden' });
+        }
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        if (amount <= 0) {
+            return res.status(400).json({ success: false, error: 'Amount must be greater than zero' });
+        }
+
+        if (user.credit < amount) {
+            return res.status(400).json({ success: false, error: 'Insufficient credit' });
+        }
+
+        user.credit -= amount;
+        await user.save();
+        
+        res.status(200).json({ success: true, data: user });
+    } catch (err) {
+        res.status(400).json({ success: false });
+        console.log(err.stack);
+    }
+};
+
 
 //@desc     get all users
 //@route    GET /api/v1/auth/users
@@ -149,3 +184,4 @@ exports.getUser = async (req, res, next) => {
         res.status(400).json({success:false});
     }
 };
+
