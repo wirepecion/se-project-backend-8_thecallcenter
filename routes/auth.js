@@ -1,5 +1,6 @@
 const express= require('express');
-const {register, login, getMe, logout, getUser, getUsers}=require('../controllers/auth');
+const {register, login, getMe, logout, getUser, getUsers, reduceCredit}=require('../controllers/auth');
+
 
 const router=express.Router();
 
@@ -9,8 +10,10 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, getMe);
 router.get('/logout', logout);
+router.post('/reduceCredit', protect, reduceCredit);
 router.get('/users', protect, authorize('admin'), getUsers);
 router.get('/users/:id', protect , authorize('admin'), getUser);
+
 
 module.exports=router;
 

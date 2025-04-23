@@ -1,5 +1,24 @@
 const mongoose = require('mongoose');
+const membershipEnum = ['unavailable','none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
+const facilityItemSchema = new mongoose.Schema({
+    name: {
+      type: String,
+      enum: [
+        'swimmingPool', 'carPark', 'gym', 'breakfast', 'spa',
+        'wifi', 'roomService', 'airportShuttle', 'restaurant', 'bar',
+        'laundry', 'kidsClub', 'petFriendly', 'businessCenter',
+        'meetingRooms', 'beachAccess', 'valetParking', 'rooftopLounge'
+      ],
+      required: true
+    },
+    rank: {
+      type: String,
+      enum: membershipEnum, // e.g. ['none', 'silver', 'gold', 'platinum']
+      required: true
+    }
+  }, { _id: false });
+  
 const HotelSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -20,7 +39,25 @@ const HotelSchema = new mongoose.Schema({
     
     picture:{
         type: String
-    }
+    },
+
+    facilities: {
+        type: [facilityItemSchema],
+        required: true
+    },
+
+    subscriptionRank: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 5
+    },
+
+    viewStatistics: {
+        type: Number,
+        default: 0
+    },
+
 },
 {
     toJSON: {virtuals:true},
