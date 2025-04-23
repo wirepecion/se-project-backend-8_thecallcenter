@@ -149,7 +149,7 @@ exports.getUsers = async (req, res, next) => {
     try {
         const total = await query.clone().countDocuments();
         const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 10;
+        const limit = parseInt(req.query.limit, 10) || 15;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
         if(startIndex > total) {
@@ -162,17 +162,17 @@ exports.getUsers = async (req, res, next) => {
         const data = await query;
         const pagination = {};
             if (endIndex < total) {
-                pagination.next = { page: page + 1, limit };
+                pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
             }
             
             if (startIndex > 0) {
-                pagination.prev = { page: page - 1, limit };
+                pagination.prev = { page: page - 1, count:limit };
             }
         res.status(200).json({
             success: true,
-             allUser: await User.countDocuments(),
-             statistic: statistic,
-            // count: limit,
+            allUser: await User.countDocuments(),
+            statistic: statistic,
+            count: endIndex>total?total-startIndex:limit,
             totalPages: Math.ceil(total / limit),
             nowPage: page,
             pagination,
