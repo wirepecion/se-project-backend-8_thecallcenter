@@ -151,19 +151,21 @@ exports.getBookings= async(req,res,next) => {
         const bookings = await query;
         const pagination = {};
             if (endIndex < total) {
-                pagination.next = { page: page + 1, limit };
+                pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
             }
             
             if (startIndex > 0) {
-                pagination.prev = { page: page - 1, limit };
+                pagination.prev = { page: page - 1, count:limit };
             }
         res.status(200).json({
             success:true,
             count:bookings.length,
             total: total,
             totalPages: Math.ceil(total / limit),
-            data:bookings,
+            nowPage: page,
             pagination,
+            data:bookings,
+            
         });
         
     
