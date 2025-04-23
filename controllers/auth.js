@@ -1,3 +1,4 @@
+const { now } = require('mongoose');
 const User = require('../models/User');
 
 //@desc     Register user
@@ -110,8 +111,32 @@ exports.logout = async (req, res, next) => {
 //@access   Private
 exports.getUsers = async (req, res, next) => {
     //TODO: TJ - Add pagination and filtering
-    
-    const query = await User.find();
+    let query;
+    const reqQuery = {...req.query};
+    const removeFields = ['select','sort','page','limit','filter','search'];
+    removeFields.forEach(param => delete reqQuery[param]);
+    let queryStr = JSON.stringify(reqQuery);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+    let queryFilter = JSON.parse(queryStr);
+    if (req.query.filter) {
+        const filters = req.query.filter.split(",");
+        queryFilter.tier = { $in: filters }; 
+        console.log(queryFilter.tier);
+         
+    }
+    queryObj = User.find(queryFilter)
+    query =queryObj.find();
+    if (req.query.select) {
+        const fields = req.query.select.split(',').join(' ');
+        query = queryObj.select(fields);
+    }
+
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        query = queryObj.sort(sortBy);
+    } else {
+        query = queryObj.sort('-createdAt');
+    }
 
     const statistic = await User.aggregate([
         {
@@ -121,14 +146,43 @@ exports.getUsers = async (req, res, next) => {
             }
         }
     ]);
-    
-
-    res.status(200).json({
-        success: true,
-        count: query.length,
-        statistic: statistic,
-        data: query
-    });
+    try {
+        const total = await query.clone().countDocuments();
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        if(startIndex > total) {
+            return res.status(400).json({
+                success:false,
+                message: 'This page does not exist'
+            });
+        }
+        query = query.skip(startIndex).limit(limit).exec();
+        const data = await query;
+        const pagination = {};
+            if (endIndex < total) {
+                pagination.next = { page: page + 1, limit };
+            }
+            
+            if (startIndex > 0) {
+                pagination.prev = { page: page - 1, limit };
+            }
+        res.status(200).json({
+            success: true,
+             allUser: await User.countDocuments(),
+             statistic: statistic,
+            // count: limit,
+            totalPages: Math.ceil(total / limit),
+            nowPage: page,
+            pagination,
+            data: data
+        });
+    } catch (error) {
+        console.error(error.message);
+        console.error(error);
+        return res.status(400).json({success: false, message: 'Error fetching users'});
+    }
 }
 
 //@desc     get one user
