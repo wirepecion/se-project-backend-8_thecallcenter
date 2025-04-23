@@ -147,7 +147,7 @@ exports.reduceCredit = async (req, res, next) => {
 //@route    GET /api/v1/auth/users
 //@access   Private
 exports.getUsers = async (req, res, next) => {
-    //TODO: TJ - Add pagination and filtering
+    
     let query;
     const reqQuery = {...req.query};
     const removeFields = ['select','sort','page','limit','filter','search'];
@@ -162,7 +162,12 @@ exports.getUsers = async (req, res, next) => {
         console.log(queryFilter.membershipTier);
          
     }
+    if (req.query.search) {
+        queryFilter.name = { $regex: req.query.search, $options: "i" }; 
+        console.log(queryFilter.name);
+    }
     queryObj = User.find(queryFilter)
+
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');
         query = queryObj.select(fields);
