@@ -363,10 +363,10 @@ exports.updateBooking = async(req,res,next) => {
 
         // Make sure the user is the booking owner or the hotel manager is the booking hotel owner
         if ((user.role === 'user' && booking.user.toString() !== user.id )
-            || (user.role === 'hotelManager' && booking.hotel.toString() !== user.responsibleHotel )) {
+            || (user.role === 'hotelManager' && booking.hotel.toString() !== user.responsibleHotel.toString() )) {
 
             console.warn(`[SECURITY] User ['${user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
-            logCreation( user.id, 'SECURITY', `${register.user.role} ['${user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
+            logCreation( user.id, 'SECURITY', `${user.role} ['${user.id}'] attempted to update booking ID: ${req.params.id} (not allowed).`);
 
             return res.status(401).json({
                 success:false,
@@ -499,7 +499,7 @@ exports.updateBooking = async(req,res,next) => {
                 }
 
             } else if ([ 'confirmed', 'checkedIn', 'completed' ].includes(status)) {
-
+                
                 if (user.role === 'user') {
 
                     console.warn(`[SECURITY] Customer ['${user.id}'] attempted to update booking status to '${status}' (not allowed). Booking ID: ${req.params.id}`);
