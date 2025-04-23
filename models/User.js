@@ -45,6 +45,17 @@ const UserSchema=new mongoose.Schema({
         default: 0
     },
 
+    membershipTier:{
+        type: String,
+        enum: ['none', 'bronze', 'silver', 'gold', 'platinum', 'diamond'],
+        default: 'none'
+    },
+
+    membershipPoints:{
+        type: Number,
+        default: 0
+    },
+
     responsibleHotel:{
         type: mongoose.Schema.ObjectId,
         ref: 'Hotel'
@@ -62,6 +73,7 @@ const UserSchema=new mongoose.Schema({
 
 //Encrypt password using bcrypt
 UserSchema.pre('save',async function(next) {
+    if (!this.isModified('password')) return next();  //Prevent hashing if password is not modified
     const salt=await bcrypt.genSalt(10);
     this.password=await bcrypt.hash(this.password,salt);
 });

@@ -150,6 +150,12 @@ exports.updatePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
 
+        //data for send email
+        const booking = await Booking.findById(payment.booking)
+        const hotel = await Hotel.findById(booking.hotel)
+        const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+        const customer = await User.findById(payment.user)
+
         if (!payment) {
             return res.status(404).json({
                 success: false,
@@ -202,14 +208,9 @@ exports.updatePayment = async (req, res) => {
                     message: `You are not allowed to update the payment status to '${status}'`
                 });
             }
-            const booking = await Booking.findById(payment.booking)
             if (user.role === 'admin') {
                 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
-                const booking = await Booking.findById(payment.booking)
-                const hotel = await Hotel.findById(booking.hotel)
-                const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
-                const customer = await User.findById(payment.user)
                 sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
             

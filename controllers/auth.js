@@ -6,7 +6,7 @@ const User = require('../models/User');
 
 exports.register = async (req, res, next) => {
     try {
-        const { name, tel, email, password, role, responsibleHotel, credit } = req.body;
+        const { name, tel, email, password, role, responsibleHotel, } = req.body;
 
         //Create user
         const user = await User.create({
@@ -16,7 +16,7 @@ exports.register = async (req, res, next) => {
             password,
             role, 
             responsibleHotel, 
-            credit
+            
         });
 
         sendTokenResponse(user, 200, res);
@@ -82,7 +82,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 //@desc     Get current logged in user
 //@route    GET /api/v1/auth/me
 //@access   Private
-exports.getMe = async (req, res, next) => {
+exports.getMe = async (req, res) => {
     const user = await User.findById(req.user.id);
     res.status(200).json({
         success: true, 
@@ -104,3 +104,84 @@ exports.logout = async (req, res, next) => {
         data: {}
     });
 };
+
+
+//@desc Reduce user credit
+//@route POST /api/v1/auth/reduceCredit
+//@access Private
+exports.reduceCredit = async (req, res, next) => {
+    try {
+        const { amount } = req.body;
+        const userId = req.body.user || req.user.id;
+        const user = await User.findById(userId);
+
+        if (req.body.userId && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Forbidden' });
+        }
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        if (amount <= 0) {
+            return res.status(400).json({ success: false, error: 'Amount must be greater than zero' });
+        }
+
+        if (user.credit < amount) {
+            return res.status(400).json({ success: false, error: 'Insufficient credit' });
+        }
+
+        user.credit -= amount;
+        await user.save();
+        
+        res.status(200).json({ success: true, data: user });
+    } catch (err) {
+        res.status(400).json({ success: false });
+        console.log(err.stack);
+    }
+};
+
+
+//@desc     get all users
+//@route    GET /api/v1/auth/users
+//@access   Private
+exports.getUsers = async (req, res, next) => {
+    //TODO: TJ - Add pagination and filtering
+    
+    const query = await User.find();
+
+    const statistic = await User.aggregate([
+        {
+            $group: {
+                _id: "$membershipTier",
+                totalUsers: { $sum: 1 },
+            }
+        }
+    ]);
+    
+
+    res.status(200).json({
+        success: true,
+        count: query.length,
+        statistic: statistic,
+        data: query
+    });
+}
+
+//@desc     get one user
+//@route    GET /api/v1/auth/users/:id
+//@access   Private
+exports.getUser = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.id).populate({path: 'responsibleHotel', select: 'name'});
+
+        if (!user) {
+            return res.status(400).json({success:false});
+        }
+
+        res.status(200).json({success:true, data:user});
+    } catch (err) {
+        res.status(400).json({success:false});
+    }
+};
+
