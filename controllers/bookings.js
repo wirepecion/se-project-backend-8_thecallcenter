@@ -10,7 +10,7 @@ const { logCreation } = require('../utils/logCreation');
 const User = require('../models/User');
 const { sendRefund } = require('../utils/sendEmails');
 const { register } = require('./auth');
-
+const { checkTier } = require('../utils/checkMembershipTier');
 const nights = 24 * 60 * 60 * 1000;
 
 //@desc     Get all bookings
@@ -514,13 +514,24 @@ exports.updateBooking = async(req,res,next) => {
                 console.log(`[BOOKING] ${user.role} ['${user.id}'] successfully updated booking status to '${status}'. Booking ID: ${req.params.id}`);
     
                 if (status === 'completed') {
-    
-                    //TODO US1-3 BE: (update booking controller) updating membership point after complete booking logic
-    
-    
-    
-                    //---------------------------------------------------------------------------------
-    
+                    const room = await Room.findById(booking.room);
+                    const point = room.price/100;;
+                    
+                    const user = await User.findById(booking.user).select('+password');
+                    user.membershipPoints += point;
+                    console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    
+                    await user.save();
+
+                    if(checkTier(user.membershipPoints) !== user.membershipTier) {
+                        user.membershipTier = checkTier(user.membershipPoints);
+                        await user.save();
+
+                        console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership tier to '${user.membershipTier}'. Booking ID: ${req.params.id}`);
+                        //TODO US1-3 BE: (update booking controller) Logging when member upgrade membership tier-----
+
+                        //-------------------------------------------------------------------------------------------
+                    }
+                    
                 }
 
             } else { // status is invalid
