@@ -118,14 +118,14 @@ exports.getUsers = async (req, res, next) => {
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
     let queryFilter = JSON.parse(queryStr);
+
     if (req.query.filter) {
         const filters = req.query.filter.split(",");
-        queryFilter.tier = { $in: filters }; 
-        console.log(queryFilter.tier);
+        queryFilter.membershipTier = { $in: filters }; 
+        console.log(queryFilter.membershipTier);
          
     }
     queryObj = User.find(queryFilter)
-    query =queryObj.find();
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');
         query = queryObj.select(fields);
