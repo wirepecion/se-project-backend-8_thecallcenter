@@ -177,7 +177,7 @@ exports.getUsers = async (req, res, next) => {
         const sortBy = req.query.sort.split(',').join(' ');
         query = queryObj.sort(sortBy);
     } else {
-        query = queryObj.sort('-createdAt');
+        query = queryObj.sort('-membershipPoints');
     }
 
     const statistic = await User.aggregate([
@@ -186,8 +186,26 @@ exports.getUsers = async (req, res, next) => {
                 _id: "$membershipTier",
                 totalUsers: { $sum: 1 },
             }
+        },
+        {
+            $project: {
+                _id: 1,
+                totalUsers: 1,
+                sortIndex: {
+                    $indexOfArray: [
+                        ["none", "bronze", "silver", "gold", "platinum", "diamond", null],
+                        "$_id"
+                    ]
+                }
+            }
+        },
+        {
+            $sort: {
+                sortIndex: 1
+            }
         }
     ]);
+    
     try {
         const total = await query.clone().countDocuments();
         const page = parseInt(req.query.page, 10) || 1;
