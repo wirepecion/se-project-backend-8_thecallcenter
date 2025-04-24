@@ -177,7 +177,7 @@ exports.getUsers = async (req, res, next) => {
         const sortBy = req.query.sort.split(',').join(' ');
         query = queryObj.sort(sortBy);
     } else {
-        query = queryObj.sort('-createdAt');
+        query = queryObj.sort('-membershipPoints');
     }
 
     const statistic = await User.aggregate([
