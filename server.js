@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -9,7 +10,6 @@ const hpp = require('hpp');
 const cors = require('cors');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
-const nodemailer = require('nodemailer')
 
 // Load env vars
 dotenv.config({path: './config/config.env'});
@@ -22,6 +22,7 @@ const bookings = require('./routes/bookings');
 const reviews = require('./routes/reviews');
 const rooms = require('./routes/rooms');
 const payments = require('./routes/payments');
+const ads = require('./routes/ads');
 const auth = require('./routes/auth');
 const rateLimit = require('express-rate-limit');
     
@@ -89,12 +90,13 @@ app.use(
 );
 
 // app.use("/api", require("./routes/email"))
-app.use('/api/v1/hotels',hotels);
-app.use('/api/v1/bookings',bookings);
-app.use('/api/v1/reviews',reviews);
-app.use('/api/v1/rooms',rooms);
-app.use('/api/v1/payments',payments);
-app.use('/api/v1/auth',auth);
+app.use('/api/v1/hotels', hotels);
+app.use('/api/v1/bookings', bookings);
+app.use('/api/v1/reviews', reviews);
+app.use('/api/v1/rooms', rooms);
+app.use('/api/v1/payments', payments);
+app.use('/api/v1/ads', ads);
+app.use('/api/v1/auth', auth);
 
 
 //Prevent http param pollution
@@ -112,14 +114,14 @@ const PORT=process.env.PORT || 5000;
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err,promise)=>{
     console.log(`Error: ${err.message}`); 
-    //Close server & exit process 
+    // Close server & exit process 
     server.close(()=>process.exit(1));
 });
 
 if (process.env.NODE_ENV !== "production") {
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+        console.log(`Server running on port ${PORT}`);
     });
-  }
+}
   
-  module.exports = app;
+module.exports = app;
