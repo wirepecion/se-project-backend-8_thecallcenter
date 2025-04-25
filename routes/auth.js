@@ -1,14 +1,19 @@
 const express= require('express');
-const {register, login, getMe, logout}=require('../controllers/auth');
+const {register, login, getMe, logout, getUser, getUsers, reduceCredit}=require('../controllers/auth');
+
 
 const router=express.Router();
 
-const {protect}=require('../middleware/auth');
+const {protect, authorize}=require('../middleware/auth');
 
 router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, getMe);
 router.get('/logout', logout);
+router.post('/reduceCredit', protect, reduceCredit);
+router.get('/users', protect, authorize('admin'), getUsers);
+router.get('/users/:id', protect , authorize('admin'), getUser);
+
 
 module.exports=router;
 
@@ -148,4 +153,71 @@ module.exports=router;
  *     responses:
  *       200:
  *         description: Logged out successfully
+
+ * /auth/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved all users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                   description: Number of users returned
+ *                 statistic:
+ *                   type: array
+ *                   description: Aggregated user data by membership tier
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         description: Membership tier
+ *                       totalUsers:
+ *                         type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ 
+ * /auth/users/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: User not found
+ *       401:
+ *         description: Unauthorized
  */

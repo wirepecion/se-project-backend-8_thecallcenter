@@ -11,29 +11,67 @@ const { logCreation } = require('../utils/logCreation');
 // @access  Private
 exports.getPayments = async (req, res) => {
     let query;
-    //General users can see only their bookings!
+    const reqQuery ={...req.query}
+    const removeFields = ['sort','page','limit'];
+    removeFields.forEach(param => delete reqQuery[param]);
+    let queryStr = JSON.stringify(reqQuery);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+    query = Payment.find(JSON.parse(queryStr));
     if (req.user.role !== 'admin') {
-        query = Payment.find({user:req.user.id});
+        query = query.find({user:req.user.id});
     } else {
-        query = Payment.find({});
+        query = query.find({});
     }
-
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        query = query.sort(sortBy);
+    } else {
+        query = query.sort('-createdAt');
+    }
+   
     try {
+        const total = await Payment.countDocuments(query);
+        console.log(total)
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        if(startIndex > total) {
+            return res.status(400).json({
+                success:false,
+                message: 'This page does not exist'
+            });
+        }
+        query = query.skip(startIndex).limit(limit);
+        console.log(query)
+        const pagination = {};
+            if (endIndex < total) {
+                pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
+            }
+            
+            if (startIndex > 0) {
+                pagination.prev = { page: page - 1, count:limit };
+            }
         const payments = await query.populate({
-            path: 'booking',
-            populate: [
-              { path: 'room' },
-              { path: 'hotel' },
-              { path: 'user' }
-            ]
-          });
-
+                path: 'booking',
+                populate: [
+                  { path: 'room' },
+                  { path: 'hotel' },
+                  { path: 'user' }
+                ]
+              });
         res.status(200).json({
             success: true,
             count: payments.length,
+            total,
+            totalPages: Math.ceil(total / limit),
+            nowPage: page,
+            pagination,
             data: payments,
         });
     } catch (error) {
+        console.error(error.message);
+        console.error(error);
         res.status(400).json({
             success: false,
             message: 'Error occurred while retrieving payments',
@@ -150,6 +188,12 @@ exports.updatePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
 
+        //data for send email
+        const booking = await Booking.findById(payment.booking)
+        const hotel = await Hotel.findById(booking.hotel)
+        const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+        const customer = await User.findById(payment.user)
+
         if (!payment) {
             return res.status(404).json({
                 success: false,
@@ -183,13 +227,14 @@ exports.updatePayment = async (req, res) => {
                 payment.status = status;
                 //log for setting payment status to unpaid
                 console.log(`[PAYMENT] Admin['${user.id}'] successfully set payment status to 'unpaid'. Payment ID: ${payment.id}`);
+                sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
                 logCreation(user.id,'PAYMENT', `[${user.role}] set payment status to 'unpaid' for booking ID: ${payment.booking} `)
 
             }
         } else if (status && status === 'pending') {
             payment.status = status;
             sendNewPayment(user.email, user.name, payment.booking);
-             console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
+            console.log(`[PAYMENT] ${user.role} ['${user.id}'] successfully set payment status to 'pending'. Payment ID: ${payment.id}`);
 
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
@@ -201,14 +246,9 @@ exports.updatePayment = async (req, res) => {
                     message: `You are not allowed to update the payment status to '${status}'`
                 });
             }
-            const booking = await Booking.findById(payment.booking)
             if (user.role === 'admin') {
                 
                 console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
-                const booking = await Booking.findById(payment.booking)
-                const hotel = await Hotel.findById(booking.hotel)
-                const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
-                const customer = await User.findById(payment.user)
                 sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
             
