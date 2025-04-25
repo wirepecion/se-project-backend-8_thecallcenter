@@ -37,7 +37,7 @@ exports.randomBanners = async (req, res, next) => {
         }
     }
 
-    const hotelฺBanners = await Hotel.find({$name: { $in: banners }}).select('name picture address tel');
+    const hotelฺBanners = await Hotel.find({name: { $in: banners }}).select('name picture address tel');
 
     res.status(200).json({
       success: true,
