@@ -151,6 +151,7 @@ exports.getUsers = async (req, res, next) => {
     const reqQuery = {...req.query};
     const removeFields = ['select','sort','page','limit','filter','search'];
     removeFields.forEach(param => delete reqQuery[param]);
+    
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
     let queryFilter = JSON.parse(queryStr);
@@ -211,27 +212,35 @@ exports.getUsers = async (req, res, next) => {
         const limit = parseInt(req.query.limit, 10) || 15;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
+        
         if(startIndex > total) {
             return res.status(400).json({
                 success:false,
                 message: 'This page does not exist'
             });
         }
+
         query = query.skip(startIndex).limit(limit).exec();
         const data = await query;
+        
         const pagination = {};
-            if (endIndex < total) {
-                pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
-            }
+        
+        if (endIndex < total) {
+            pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
+        }
             
-            if (startIndex > 0) {
-                pagination.prev = { page: page - 1, count:limit };
-            }
+        if (startIndex > 0) {
+            pagination.prev = { page: page - 1, count:limit };
+        }
+
+        const allUsers = await User.find(queryFilter);
+
         res.status(200).json({
             success: true,
-            allUser: await User.countDocuments(),
+            allUser: allUsers.length,
+            allUsers: allUsers,
             statistic: statistic,
-            count: endIndex>total?total-startIndex:limit,
+            count: endIndex > total ? total - startIndex : limit,
             totalPages: Math.ceil(total / limit),
             nowPage: page,
             pagination,
