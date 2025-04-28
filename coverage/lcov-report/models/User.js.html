@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">57.14% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>8/14</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.53% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>8/13</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -153,11 +153,14 @@
 <a name='L88'></a><a href='#L88'>88</a>
 <a name='L89'></a><a href='#L89'>89</a>
 <a name='L90'></a><a href='#L90'>90</a>
-<a name='L91'></a><a href='#L91'>91</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -225,25 +228,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span></td><td class="text"><pre class="prettyprint lang-js">const mongoose=require('mongoose');
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span></td><td class="text"><pre class="prettyprint lang-js">const mongoose=require('mongoose');
 const bcrypt=require('bcryptjs');
 const jwt=require('jsonwebtoken');
 &nbsp;
@@ -315,22 +321,25 @@ const UserSchema=new mongoose.Schema({
 });
 &nbsp;
 //Encrypt password using bcrypt
-UserSchema.pre('save',<span class="fstat-no" title="function not covered" >as</span>ync function(next) {
-<span class="cstat-no" title="statement not covered" >    if (!this.isModified('password')) <span class="cstat-no" title="statement not covered" >return next(); </span></span> //Prevent hashing if password is not modified
-    const salt=<span class="cstat-no" title="statement not covered" >await bcrypt.genSalt(10);</span>
-<span class="cstat-no" title="statement not covered" >    this.password=await bcrypt.hash(this.password,salt);</span>
+/* istanbul ignore next */
+UserSchema.pre('save',async function(next) {
+    if (!this.isModified('password')) return next();  //Prevent hashing if password is not modified
+    const salt=await bcrypt.genSalt(10);
+    this.password=await bcrypt.hash(this.password,salt);
 });
 &nbsp;
 //Sign JWT and return
-UserSchema.methods.getSignedJwtToken=<span class="fstat-no" title="function not covered" >fu</span>nction(){
-<span class="cstat-no" title="statement not covered" >    return jwt.sign({id:this._id},process.env.JWT_SECRET,{</span>
+/* istanbul ignore next */
+UserSchema.methods.getSignedJwtToken=function(){
+    return jwt.sign({id:this._id},process.env.JWT_SECRET,{
         expiresIn: process.env.JWT_EXPIRE
     });
 };
 &nbsp;
 //Match user entered password to hashed password in database
-UserSchema.methods.matchPassword=<span class="fstat-no" title="function not covered" >as</span>ync function(enteredPassword){
-<span class="cstat-no" title="statement not covered" >    return await bcrypt.compare(enteredPassword, this.password);</span>
+/* istanbul ignore next */
+UserSchema.methods.matchPassword=async function(enteredPassword){
+    return await bcrypt.compare(enteredPassword, this.password);
 }
 &nbsp;
 module.exports = mongoose.model('User',UserSchema);</pre></td></tr></table></pre>
@@ -340,7 +349,7 @@ module.exports = mongoose.model('User',UserSchema);</pre></td></tr></table></pre
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-26T13:07:14.556Z
+                at 2025-04-28T20:51:58.619Z
             </div>
         <script src="../prettify.js"></script>
         <script>

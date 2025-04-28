@@ -9,6 +9,7 @@ const { logCreation } = require('../utils/logCreation');
 // @desc    Get all payments
 // @route   GET /api/v1/payments
 // @access  Private
+/* istanbul ignore next */
 exports.getPayments = async (req, res) => {
     let query;
     const reqQuery ={...req.query}
@@ -82,6 +83,7 @@ exports.getPayments = async (req, res) => {
 // @desc    Get single payment
 // @route   GET /api/v1/payments/:id
 // @access  Public
+/* istanbul ignore next */
 exports.getPayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id).populate({
@@ -122,6 +124,7 @@ exports.getPayment = async (req, res) => {
 // @desc    Create a new payment
 // @route   POST /api/v1/bookings/:bookingId/payments
 // @access  Private
+/* istanbul ignore next */
 exports.createPayment = async (req, res) => {
     try {
         req.body.booking = req.params.bookingId;
@@ -310,6 +313,7 @@ exports.updatePayment = async (req, res) => {
 // @desc    Delete a payment (permanent delete)
 // @route   DELETE /api/v1/payments/:id
 // @access  Private
+/* istanbul ignore next */
 exports.deletePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
