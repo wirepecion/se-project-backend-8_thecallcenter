@@ -1,3 +1,4 @@
+const { now } = require('mongoose');
 const User = require('../models/User');
 
 //@desc     Register user
@@ -6,7 +7,7 @@ const User = require('../models/User');
 
 exports.register = async (req, res, next) => {
     try {
-        const { name, tel, email, password, role, responsibleHotel, } = req.body;
+        const { name, tel, email, password, } = req.body;
 
         //Create user
         const user = await User.create({
@@ -14,9 +15,8 @@ exports.register = async (req, res, next) => {
             tel,
             email,
             password,
-            role, 
-            responsibleHotel, 
-            
+            membershipTier: 'none',
+            membershipPoints: 0
         });
 
         sendTokenResponse(user, 200, res);
@@ -146,9 +146,39 @@ exports.reduceCredit = async (req, res, next) => {
 //@route    GET /api/v1/auth/users
 //@access   Private
 exports.getUsers = async (req, res, next) => {
-    //TODO: TJ - Add pagination and filtering
     
-    const query = await User.find();
+    let query;
+    const reqQuery = {...req.query};
+    const removeFields = ['select','sort','page','limit','filter','search'];
+    removeFields.forEach(param => delete reqQuery[param]);
+    
+    let queryStr = JSON.stringify(reqQuery);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+    let queryFilter = JSON.parse(queryStr);
+
+    if (req.query.filter) {
+        const filters = req.query.filter.split(",");
+        queryFilter.membershipTier = { $in: filters }; 
+        console.log(queryFilter.membershipTier);
+         
+    }
+    if (req.query.search) {
+        queryFilter.name = { $regex: req.query.search, $options: "i" }; 
+        console.log(queryFilter.name);
+    }
+    queryObj = User.find(queryFilter)
+
+    if (req.query.select) {
+        const fields = req.query.select.split(',').join(' ');
+        query = queryObj.select(fields);
+    }
+
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        query = queryObj.sort(sortBy);
+    } else {
+        query = queryObj.sort('-membershipPoints');
+    }
 
     const statistic = await User.aggregate([
         {
@@ -156,16 +186,71 @@ exports.getUsers = async (req, res, next) => {
                 _id: "$membershipTier",
                 totalUsers: { $sum: 1 },
             }
+        },
+        {
+            $project: {
+                _id: 1,
+                totalUsers: 1,
+                sortIndex: {
+                    $indexOfArray: [
+                        ["none", "bronze", "silver", "gold", "platinum", "diamond", null],
+                        "$_id"
+                    ]
+                }
+            }
+        },
+        {
+            $sort: {
+                sortIndex: 1
+            }
         }
     ]);
     
+    try {
+        const total = await query.clone().countDocuments();
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 15;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        
+        if(startIndex > total) {
+            return res.status(400).json({
+                success:false,
+                message: 'This page does not exist'
+            });
+        }
 
-    res.status(200).json({
-        success: true,
-        count: query.length,
-        statistic: statistic,
-        data: query
-    });
+        query = query.skip(startIndex).limit(limit).exec();
+        const data = await query;
+        
+        const pagination = {};
+        
+        if (endIndex < total) {
+            pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
+        }
+            
+        if (startIndex > 0) {
+            pagination.prev = { page: page - 1, count:limit };
+        }
+
+        const allUsers = await User.find(queryFilter);
+
+        res.status(200).json({
+            success: true,
+            allUser: allUsers.length,
+            allUsers: allUsers,
+            statistic: statistic,
+            count: endIndex > total ? total - startIndex : limit,
+            totalPages: Math.ceil(total / limit),
+            nowPage: page,
+            pagination,
+            data: data
+        });
+    } catch (error) {
+        console.error(error.message);
+        console.error(error);
+        return res.status(400).json({success: false, message: 'Error fetching users'});
+    }
 }
 
 //@desc     get one user
