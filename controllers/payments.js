@@ -189,11 +189,7 @@ exports.updatePayment = async (req, res) => {
         const payment = await Payment.findById(req.params.id);
 
         //data for send email
-        const booking = await Booking.findById(payment.booking)
-        const hotel = await Hotel.findById(booking.hotel)
-        const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
-        const customer = await User.findById(payment.user)
-
+       
         if (!payment) {
             return res.status(404).json({
                 success: false,
@@ -201,6 +197,12 @@ exports.updatePayment = async (req, res) => {
             });
         }
 
+        const booking = await Booking.findById(payment.booking)
+        const hotel = await Hotel.findById(booking.hotel)
+        const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+        const customer = await User.findById(payment.user)
+
+        
         const { amount, method, status } = req.body;
         const user = req.user;
         

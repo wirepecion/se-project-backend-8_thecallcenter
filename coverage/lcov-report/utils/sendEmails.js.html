@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">31.81% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/22</span>
+                <span class='fraction'>11/22</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">33.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>2/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">31.81% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>7/22</span>
+                <span class='fraction'>11/22</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -208,7 +208,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -231,7 +231,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -275,7 +275,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -308,7 +308,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -333,8 +333,8 @@ const transporter = nodeMailer.createTransport({
     }
 });
 &nbsp;
-exports.sendNewPayment = <span class="fstat-no" title="function not covered" >(u</span>serEmail,userName,bookingId) =&gt;{
-    const mailOptions = <span class="cstat-no" title="statement not covered" >{</span>
+exports.sendNewPayment = (userEmail,userName,bookingId) =&gt;{
+    const mailOptions = {
         from: process.env.SMPT_MAIL,
                     to: userEmail,
                     subject: "[No-reply] New Payment",
@@ -357,7 +357,7 @@ exports.sendNewPayment = <span class="fstat-no" title="function not covered" >(u
     &lt;/div&gt;
     `
     }
-<span class="cstat-no" title="statement not covered" >    transporter.sendMail(mailOptions, <span class="fstat-no" title="function not covered" >fu</span>nction(error, info){</span>
+    transporter.sendMail(mailOptions, <span class="fstat-no" title="function not covered" >fu</span>nction(error, info){
 <span class="cstat-no" title="statement not covered" >        if (error) {</span>
 <span class="cstat-no" title="statement not covered" >            console.error("Eror :", error);</span>
         } else {
@@ -400,8 +400,8 @@ exports.sendRefund = <span class="fstat-no" title="function not covered" >(e</sp
 };
 &nbsp;
 &nbsp;
-exports.sendTOHotelManager = <span class="fstat-no" title="function not covered" >(h</span>otelEmail,userName,bookingId,prevStatus,nowStatus,adminId) =&gt;{
-    const mailOptions = <span class="cstat-no" title="statement not covered" >{</span>
+exports.sendTOHotelManager = (hotelEmail,userName,bookingId,prevStatus,nowStatus,adminId) =&gt;{
+    const mailOptions = {
         from: process.env.SMPT_MAIL,
                     to: hotelEmail,
                     subject: "🔔 Payment Status Updated by Admin",
@@ -434,7 +434,7 @@ exports.sendTOHotelManager = <span class="fstat-no" title="function not covered"
                         &lt;/div&gt;
                     `
     }
-<span class="cstat-no" title="statement not covered" >    transporter.sendMail(mailOptions, <span class="fstat-no" title="function not covered" >fu</span>nction(error, info){</span>
+    transporter.sendMail(mailOptions, <span class="fstat-no" title="function not covered" >fu</span>nction(error, info){
 <span class="cstat-no" title="statement not covered" >        if (error) {</span>
 <span class="cstat-no" title="statement not covered" >            console.error("Eror :", error);</span>
         } else {
@@ -448,7 +448,7 @@ exports.sendTOHotelManager = <span class="fstat-no" title="function not covered"
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-20T03:22:26.012Z
+                at 2025-04-26T13:07:14.556Z
             </div>
         <script src="../prettify.js"></script>
         <script>
