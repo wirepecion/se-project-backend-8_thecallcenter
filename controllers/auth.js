@@ -233,18 +233,19 @@ exports.getUsers = async (req, res, next) => {
             pagination.prev = { page: page - 1, count:limit };
         }
 
-        const allUsers = await User.find(queryFilter);
+        const allUsers = await User.find(queryFilter,{_id: 0,name:1}).sort({ name: 1 }).collation({ locale: "en", strength: 1 })                   
 
         res.status(200).json({
             success: true,
             allUser: allUsers.length,
-            allUsers: allUsers,
             statistic: statistic,
             count: endIndex > total ? total - startIndex : limit,
             totalPages: Math.ceil(total / limit),
             nowPage: page,
             pagination,
-            data: data
+            data: data,
+            allNameOfUsers: allUsers,
+
         });
     } catch (error) {
         console.error(error.message);
