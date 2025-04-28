@@ -9,7 +9,7 @@ const LogSchema = new mongoose.Schema({
 
     type: {
         type: String,
-        enum: ['REFUND', 'PAYMENT', 'WARNING'],
+        enum: ['REFUND', 'PAYMENT', 'WARNING','MEMBERSHIP'],
         required: true
     },
 

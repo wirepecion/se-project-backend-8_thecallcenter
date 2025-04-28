@@ -151,19 +151,21 @@ exports.getBookings= async(req,res,next) => {
         const bookings = await query;
         const pagination = {};
             if (endIndex < total) {
-                pagination.next = { page: page + 1, limit };
+                pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
             }
             
             if (startIndex > 0) {
-                pagination.prev = { page: page - 1, limit };
+                pagination.prev = { page: page - 1, count:limit };
             }
         res.status(200).json({
             success:true,
             count:bookings.length,
             total: total,
             totalPages: Math.ceil(total / limit),
-            data:bookings,
+            nowPage: page,
             pagination,
+            data:bookings,
+            
         });
         
     
@@ -259,7 +261,7 @@ exports.addBooking = async (req, res, next) => {
 
         // Step 2: Fetch room and check availability
         const room = await Room.findById(roomId);
-
+        console.log(room);
         // Check if the room exists
         if (!room) {
             return res.status(404).json({
@@ -516,7 +518,6 @@ exports.updateBooking = async(req,res,next) => {
                 if (status === 'completed') {
                     const room = await Room.findById(booking.room);
                     const point = room.price/100;;
-                    
                     const user = await User.findById(booking.user).select('+password');
                     user.membershipPoints += point;
                     console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    
@@ -527,9 +528,7 @@ exports.updateBooking = async(req,res,next) => {
                         await user.save();
 
                         console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership tier to '${user.membershipTier}'. Booking ID: ${req.params.id}`);
-                        //TODO US1-3 BE: (update booking controller) Logging when member upgrade membership tier-----
-
-                        //-------------------------------------------------------------------------------------------
+                        logCreation( user.id, 'MEMBERSHIP', `Membership tier updated to '${user.membershipTier}'`);
                     }
                     
                 }
