@@ -515,7 +515,11 @@ exports.updateBooking = async(req,res,next) => {
                 if (status === 'completed') {
                     const room = await Room.findById(booking.room);
 
-                    const point = room.price/100;;
+                    // const point = room.price/100;;
+                    const point = (room.price / 100) * (new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / nights;
+
+                    // const user = await User.findById(booking.user).select('+password');
+                    user.membershipPoints += point;
                     // const user = await User.findById(booking.user).select('+password');
                     user.membershipPoints += point;
                     console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    
