@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.81% </span>
+                <span class="strong">99.08% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>101/110</span>
+                <span class='fraction'>108/109</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.53% </span>
+                <span class="strong">83.07% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>53/65</span>
+                <span class='fraction'>54/65</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.81% </span>
+                <span class="strong">99.08% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>101/110</span>
+                <span class='fraction'>108/109</span>
             </div>
         
             
@@ -1277,17 +1277,17 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1359,16 +1359,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1971,17 +1971,17 @@ exports.updateBooking = async(req,res,next) =&gt; {
                 if (status === 'completed') {
                     const room = await Room.findById(booking.room);
                     const point = room.price/100;;
-                    const user = await User.findById(booking.user).select('+password');
-<span class="cstat-no" title="statement not covered" >                    user.membershipPoints += point;</span>
-<span class="cstat-no" title="statement not covered" >                    console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    </span>
-<span class="cstat-no" title="statement not covered" >                    await user.save();</span>
+                    // const user = await User.findById(booking.user).select('+password');
+                    user.membershipPoints += point;
+                    console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    
+                    await user.save();
 &nbsp;
-<span class="cstat-no" title="statement not covered" >                    if(checkTier(user.membershipPoints) !== user.membershipTier) {</span>
-<span class="cstat-no" title="statement not covered" >                        user.membershipTier = checkTier(user.membershipPoints);</span>
-<span class="cstat-no" title="statement not covered" >                        await user.save();</span>
+                    <span class="missing-if-branch" title="else path not taken" >E</span>if(checkTier(user.membershipPoints) !== user.membershipTier) {
+                        user.membershipTier = checkTier(user.membershipPoints);
+                        await user.save();
 &nbsp;
-<span class="cstat-no" title="statement not covered" >                        console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership tier to '${user.membershipTier}'. Booking ID: ${req.params.id}`);</span>
-<span class="cstat-no" title="statement not covered" >                        logCreation( user.id, 'MEMBERSHIP', `Membership tier updated to '${user.membershipTier}'`);</span>
+                        console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership tier to '${user.membershipTier}'. Booking ID: ${req.params.id}`);
+                        logCreation( user.id, 'MEMBERSHIP', `Membership tier updated to '${user.membershipTier}'`);
                     }
                     
                 }
@@ -2152,7 +2152,7 @@ exports.deleteBooking = async (req, res, next) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-29T01:57:47.765Z
+                at 2025-04-29T02:31:38.490Z
             </div>
         <script src="../prettify.js"></script>
         <script>

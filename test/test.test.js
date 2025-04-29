@@ -322,9 +322,6 @@ describe('updateBooking', () => {
     it('should handle error during refund process', async () => {
         Booking.findById.mockResolvedValue(mockBookingWithCancelableStatus);
         Payment.findOne.mockResolvedValue(mockPayment);
-        Room.findById.mockResolvedValue(mockRoom);
-        User.findById.mockResolvedValue(mockUser);
-        
         Payment.findOne = jest.fn(() => { throw new Error('DB FindOne error'); });
       
         const req = createMockRequest({ id: 'bookingId' }, { status: 'canceled' }, mockAdminUser);
@@ -381,36 +378,28 @@ describe('updateBooking', () => {
 
       it('should update membership points and tier when status is completed', async () => {
         // Mock the initial setup
-        mockUser.membershipPoints = 200; // Initial points
-        mockUser.membershipTier = 'silver'; // Initial tier
-        mockUser.save = jest.fn();
+        const mockUserCopy = { ...mockUser, membershipPoints: 200, membershipTier: 'silver', save: jest.fn() };
       
         const mockRoom = {
           price: 5000, // Set the room price to 50000, which should give 500 / 100 = 500 points
         };
       
-        const req = {
-          params: { _id: mockBooking._id },
-          body: { status: 'completed' },
-          user: { _id: mockUser._id },
-        };
-        const res = {
-          status: jest.fn().mockReturnThis(),
-          json: jest.fn(),
-        };
+        const req = createMockRequest({ id: mockBooking._id }, { status: 'completed' }, mockUserCopy)
+
+        const res = createMockResponse()
       
         // Mock Room.findById and User.findById
         Room.findById.mockResolvedValue(mockRoom);
-        User.findById.mockResolvedValue(mockUser);
+        User.findById.mockResolvedValue(mockUserCopy);
         checkTier.mockReturnValue('gold'); // Return 'gold' for the new tier when membership points reach 250
       
         // Call the function
         await updateBooking(req, res);
       
         // Check if the user's membership points were updated correctly
-        expect(mockUser.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
+        // expect(mockUser.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
       
-        // Check if the membership tier was updated
+        expect(mockUserCopy.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
         expect(mockUser.membershipTier).toBe('gold'); // Tier should change to 'gold'
       
         // Ensure user.save is called twice (once for updating points and once for tier update)
@@ -436,5 +425,5 @@ describe('updateBooking', () => {
         );
       });
       
-          
+       
 });

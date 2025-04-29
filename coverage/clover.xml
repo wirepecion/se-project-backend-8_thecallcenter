@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1745891867848" clover="3.2.0">
-  <project timestamp="1745891867848" name="All files">
-    <metrics statements="260" coveredstatements="251" conditionals="133" coveredconditionals="119" methods="6" coveredmethods="5" elements="399" coveredelements="375" complexity="0" loc="260" ncloc="260" packages="5" files="16" classes="16"/>
+<coverage generated="1745893898566" clover="3.2.0">
+  <project timestamp="1745893898567" name="All files">
+    <metrics statements="259" coveredstatements="258" conditionals="133" coveredconditionals="120" methods="6" coveredmethods="5" elements="398" coveredelements="383" complexity="0" loc="259" ncloc="259" packages="5" files="16" classes="16"/>
     <package name="controllers">
-      <metrics statements="172" coveredstatements="163" conditionals="103" coveredconditionals="89" methods="4" coveredmethods="3"/>
+      <metrics statements="171" coveredstatements="170" conditionals="103" coveredconditionals="90" methods="4" coveredmethods="3"/>
       <file name="auth.js" path="C:\Users\Rirhc\Desktop\CU cedt\Year_1\Semester 2\Software Engineering\project\se-project-backend-8_thecallcenter\controllers\auth.js">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="1" count="2" type="stmt"/>
         <line num="2" count="2" type="stmt"/>
       </file>
       <file name="bookings.js" path="C:\Users\Rirhc\Desktop\CU cedt\Year_1\Semester 2\Software Engineering\project\se-project-backend-8_thecallcenter\controllers\bookings.js">
-        <metrics statements="110" coveredstatements="101" conditionals="65" coveredconditionals="53" methods="3" coveredmethods="2"/>
+        <metrics statements="109" coveredstatements="108" conditionals="65" coveredconditionals="54" methods="3" coveredmethods="2"/>
         <line num="1" count="2" type="stmt"/>
         <line num="2" count="2" type="stmt"/>
         <line num="3" count="2" type="stmt"/>
@@ -87,15 +87,14 @@
         <line num="518" count="2" type="cond" truecount="2" falsecount="0"/>
         <line num="519" count="1" type="stmt"/>
         <line num="520" count="1" type="stmt"/>
-        <line num="521" count="1" type="stmt"/>
-        <line num="522" count="0" type="stmt"/>
-        <line num="523" count="0" type="stmt"/>
-        <line num="524" count="0" type="stmt"/>
-        <line num="526" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="527" count="0" type="stmt"/>
-        <line num="528" count="0" type="stmt"/>
-        <line num="530" count="0" type="stmt"/>
-        <line num="531" count="0" type="stmt"/>
+        <line num="522" count="1" type="stmt"/>
+        <line num="523" count="1" type="stmt"/>
+        <line num="524" count="1" type="stmt"/>
+        <line num="526" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="527" count="1" type="stmt"/>
+        <line num="528" count="1" type="stmt"/>
+        <line num="530" count="1" type="stmt"/>
+        <line num="531" count="1" type="stmt"/>
         <line num="538" count="1" type="stmt"/>
         <line num="540" count="1" type="stmt"/>
         <line num="547" count="7" type="cond" truecount="2" falsecount="2"/>
@@ -117,10 +116,10 @@
         <line num="595" count="4" type="stmt"/>
         <line num="598" count="4" type="stmt"/>
         <line num="599" count="4" type="stmt"/>
-        <line num="603" count="7" type="stmt"/>
-        <line num="605" count="7" type="stmt"/>
-        <line num="611" count="2" type="stmt"/>
-        <line num="612" count="2" type="stmt"/>
+        <line num="603" count="8" type="stmt"/>
+        <line num="605" count="8" type="stmt"/>
+        <line num="611" count="1" type="stmt"/>
+        <line num="612" count="1" type="stmt"/>
       </file>
       <file name="payments.js" path="C:\Users\Rirhc\Desktop\CU cedt\Year_1\Semester 2\Software Engineering\project\se-project-backend-8_thecallcenter\controllers\payments.js">
         <metrics statements="60" coveredstatements="60" conditionals="38" coveredconditionals="36" methods="1" coveredmethods="1"/>
