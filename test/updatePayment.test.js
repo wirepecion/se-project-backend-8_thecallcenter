@@ -224,4 +224,59 @@ describe('Update Payment', () => {
             message: 'Error occurred while updating payment',
         });
     });
+
+    it('should return 200 if admin tries to set status to failed', async () => {
+        req.body.status = 'failed';
+        req.user.role = 'admin';
+
+        await updatePayment(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({
+            success: true,
+            message: 'Payment updated successfully',
+            data: expect.objectContaining({
+                status: 'failed',
+            }),
+        });
+    });
+
+    it('should return 403 if non-admin user tries to set status to failed', async () => {
+        req.body.status = 'failed';
+        req.user.role = 'user';
+
+        await updatePayment(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: `You are not allowed to update the payment status to 'failed'`,
+        });
+    });
+
+    it('should return 403 if non-verify user tries to set status to failed', async () => {
+        req.body.status = 'failed';
+        req.user.role = 'none-verify';
+
+        await updatePayment(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: `You are not allowed to update the payment status to 'failed'`,
+        });
+    });
+
+    it('should return 403 if non-verify user tries to set status to completed', async () => {
+        req.body.status = 'completed';
+        req.user.role = 'none-verify';
+
+        await updatePayment(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+            success: false,
+            message: `You are not allowed to update the payment status to 'completed'`,
+        });
+    });
 });

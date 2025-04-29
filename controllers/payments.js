@@ -244,19 +244,25 @@ exports.updatePayment = async (req, res) => {
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
                 // log for unauthorized access
-                console.warn(`[SECURITY] User '${user.id}' with role '${user.role}' attempted to update payment status to '${status}' (not allowed). Payment ID: ${payment.id}`);
+                // console.warn(`[SECURITY] User '${user.id}' with role '${user.role}' attempted to update payment status to '${status}' (not allowed). Payment ID: ${payment.id}`);
                 logCreation(user.id,'WARNING', `Warning [${user.role}] attempted to set payment status to '${status}' for booking ID: ${payment.booking} `)
                 return res.status(403).json({
                     success: false,
                     message: `You are not allowed to update the payment status to '${status}'`
                 });
             }
-            if (user.role === 'admin') {
+            else if (user.role === 'admin') {
                 
-                console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
+                // console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
                 sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
-            
+
+            else {
+                return res.status(403).json({
+                    success: false,
+                    message: `You are not allowed to update the payment status to '${status}'`
+                });
+            }    
             
             payment.status = status; // both admin and manager run here
             if(status === 'completed') booking.status = 'confirmed'; 
