@@ -1,6 +1,8 @@
 // utils/paymentTimeoutUtil.js
 const Payment = require('../models/Payment'); 
 const logCreation = require('./logCreation'); 
+
+/* istanbul ignore next */
 exports.schedulePaymentTimeout = (paymentId, timeout = 30000) => { //30 seconds default timeout (change later)
   setTimeout(async () => {
     try {

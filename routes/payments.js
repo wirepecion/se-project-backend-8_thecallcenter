@@ -13,7 +13,6 @@ router.route('/:id')
     .put(protect, authorize('admin','user','hotelManager'), updatePayment)
     .delete(protect, authorize('admin','user',), deletePayment);
 
-
 module.exports = router;
 
 /**
