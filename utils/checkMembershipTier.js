@@ -9,7 +9,9 @@ exports.checkTier = (point) => {
         return 'silver';
     }else if(point >= 50){
         return 'bronze';
-    }else{
+    }else if(point >= 0){
         return 'none'
+    }else {
+        return null;
     }
 }

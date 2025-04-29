@@ -379,7 +379,7 @@ exports.updateBooking = async(req,res,next) => {
         const { checkInDate, checkOutDate, status } = req.body;
 
         if (status && (checkInDate || checkOutDate)) {
-            console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${checkInDate ? 'amount' : ''}${checkInDate && checkOutDate ? ' and ' : ''}${checkOutDate ? 'method' : ''}' in the same request. Not allowed. Booking ID: ${req.params.id}`);
+            // console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${checkInDate ? 'amount' : ''}${checkInDate && checkOutDate ? ' and ' : ''}${checkOutDate ? 'method' : ''}' in the same request. Not allowed. Booking ID: ${req.params.id}`);
 
             return res.status(400).json({
               error: "InvalidRequest",
@@ -517,8 +517,9 @@ exports.updateBooking = async(req,res,next) => {
     
                 if (status === 'completed') {
                     const room = await Room.findById(booking.room);
-                    const point = room.price/100*((booking.checkOutDate - booking.checkInDate)/nights);
-                    const user = await User.findById(booking.user).select('+password');
+
+                    const point = room.price/100;;
+                    // const user = await User.findById(booking.user).select('+password');
                     user.membershipPoints += point;
                     console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    
                     await user.save();
