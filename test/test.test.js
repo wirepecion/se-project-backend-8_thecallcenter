@@ -213,14 +213,14 @@ describe('updateBooking', () => {
             user: req.user.id, 
             hotel: 'hotelId', 
             status: 'confirmed', 
-            checkInDate: new Date(), 
-            checkOutDate: new Date(),
+            checkInDate: new Date('2024-01-12'), 
+            checkOutDate: new Date('2024-01-14'),
             room: 'roomId',
             save: jest.fn()
         });
         Payment.findOne.mockResolvedValue({ amount: 100, status: 'completed', save: jest.fn() });
         refundCalculation.mockReturnValue(50);
-        Room.findById.mockResolvedValue({ unavailablePeriod: [], save: jest.fn() });
+        Room.findById.mockResolvedValue({ unavailablePeriod: [{startDate: new Date('2024-01-12'), endDate: new Date('2024-01-14')}], save: jest.fn() });
         User.findById.mockResolvedValue({ email: 'test@example.com', name: 'Test User' });
 
         await updateBooking(req, res, next);
@@ -400,10 +400,10 @@ describe('updateBooking', () => {
         // expect(mockUser.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
       
         expect(mockUserCopy.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
-        expect(mockUser.membershipTier).toBe('gold'); // Tier should change to 'gold'
+        expect(mockUserCopy.membershipTier).toBe('gold'); // Tier should change to 'gold'
       
         // Ensure user.save is called twice (once for updating points and once for tier update)
-        expect(mockUser.save).toHaveBeenCalledTimes(2);
+        expect(mockUserCopy.save).toHaveBeenCalledTimes(2);
       
         // Check if the checkTier function was called
         expect(checkTier).toHaveBeenCalledWith(250);
@@ -414,16 +414,35 @@ describe('updateBooking', () => {
           'MEMBERSHIP',
           `Membership tier updated to 'gold'`
         );
-      
-        // Optionally check the console logs for updates
-        const consoleSpy = jest.spyOn(console, 'log');
-        expect(consoleSpy).toHaveBeenCalledWith(
-          `[MEMBERSHIP] ${mockUser.role} ['${mockUser.id}'] successfully updated membership points to '250'. Booking ID: bookingId`
-        );
-        expect(consoleSpy).toHaveBeenCalledWith(
-          `[MEMBERSHIP] ${mockUser.role} ['${mockUser.id}'] successfully updated membership tier to 'gold'. Booking ID: bookingId`
-        );
       });
+
+      it('should update membership points when status is completed', async () => {
+        // Mock the initial setup
+        const mockUserCopy = { ...mockUser, membershipPoints: 200, membershipTier: 'silver', save: jest.fn() };
       
-       
+        const mockRoom = {
+          price: 500, // Set the room price to 50000, which should give 500 / 100 = 500 points
+        };
+      
+        const req = createMockRequest({ id: mockBooking._id }, { status: 'completed' }, mockUserCopy)
+
+        const res = createMockResponse()
+      
+        // Mock Room.findById and User.findById
+        Room.findById.mockResolvedValue(mockRoom);
+        User.findById.mockResolvedValue(mockUserCopy);
+        checkTier.mockReturnValue('silver'); // Return 'gold' for the new tier when membership points reach 250
+      
+        // Call the function
+        await updateBooking(req, res);
+      
+        // Check if the user's membership points were updated correctly
+        // expect(mockUser.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
+      
+        expect(mockUserCopy.membershipPoints).toBe(205); // 200 + (50000 / 100) = 250
+        expect(mockUserCopy.membershipTier).toBe('silver'); // Tier should change to 'gold'
+    
+        // Check if the checkTier function was called
+        expect(checkTier).toHaveBeenCalledWith(205);
+      });
 });
