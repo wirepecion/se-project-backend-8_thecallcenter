@@ -121,19 +121,31 @@ exports.reduceCredit = async (req, res, next) => {
         const user = await User.findById(userId);
 
         if (req.body.userId && req.user.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Forbidden' });
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Forbidden' 
+            });
         }
 
         if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
+            return res.status(404).json({ 
+                success: false, 
+                error: 'User not found' 
+            });
         }
 
         if (amount <= 0) {
-            return res.status(400).json({ success: false, error: 'Amount must be greater than zero' });
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Amount must be greater than zero' 
+            });
         }
 
         if (user.credit < amount) {
-            return res.status(400).json({ success: false, error: 'Insufficient credit' });
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Insufficient credit' 
+            });
         }
 
         user.credit -= amount;
