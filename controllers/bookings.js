@@ -514,19 +514,25 @@ exports.updateBooking = async(req,res,next) => {
     
                 if (status === 'completed') {
                     const room = await Room.findById(booking.room);
+                    const customer = await User.findById(booking.user);
 
-                    const point = room.price/100;;
-                    // const user = await User.findById(booking.user).select('+password');
-                    user.membershipPoints += point;
-                    console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    
-                    await user.save();
+                    console.log("====================================");
+                    console.log(customer.membershipPoints);
+                    console.log("====================================");
 
-                    if(checkTier(user.membershipPoints) !== user.membershipTier) {
-                        user.membershipTier = checkTier(user.membershipPoints);
-                        await user.save();
+                    const point = (room.price / 100) * (new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / nights;
+                    const newPoint = parseInt(customer.membershipPoints, 10) + point;
+                    customer.membershipPoints = newPoint;
 
-                        console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership tier to '${user.membershipTier}'. Booking ID: ${req.params.id}`);
-                        logCreation( user.id, 'MEMBERSHIP', `Membership tier updated to '${user.membershipTier}'`);
+                    console.log(`[MEMBERSHIP] ${customer.role} ['${customer.id}'] successfully updated membership points to '${customer.membershipPoints}'. Booking ID: ${req.params.id}`);                    
+                    await customer.save();
+
+                    if(checkTier(customer.membershipPoints) !== customer.membershipTier) {
+                        customer.membershipTier = checkTier(customer.membershipPoints);
+                        await customer.save();
+
+                        console.log(`[MEMBERSHIP] ${customer.role} ['${customer.id}'] successfully updated membership tier to '${customer.membershipTier}'. Booking ID: ${req.params.id}`);
+                        logCreation( customer.id, 'MEMBERSHIP', `Membership tier updated to '${customer.membershipTier}'`);
                     }
                     
                 }
