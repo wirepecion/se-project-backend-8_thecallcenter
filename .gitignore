@@ -3,6 +3,7 @@
 
 # ignore config file
 config/config.env
+.env
 
 # ignore coverage reports
 /coverage
