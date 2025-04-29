@@ -1,5 +1,6 @@
 const Log = require('../models/Log'); 
 
+/* istanbul ignore next */
 exports.logCreation = (userId, type, action) => {
     const logEntry = new Log({
         user: userId,

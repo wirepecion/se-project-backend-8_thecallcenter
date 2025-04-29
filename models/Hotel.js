@@ -49,8 +49,6 @@ const HotelSchema = new mongoose.Schema({
     subscriptionRank: {
         type: Number,
         required: true,
-        min: 0,
-        max: 5
     },
 
     viewStatistics: {

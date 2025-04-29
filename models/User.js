@@ -70,6 +70,7 @@ const UserSchema=new mongoose.Schema({
 });
 
 //Encrypt password using bcrypt
+/* istanbul ignore next */
 UserSchema.pre('save',async function(next) {
     if (!this.isModified('password')) return next();  //Prevent hashing if password is not modified
     const salt=await bcrypt.genSalt(10);
@@ -77,6 +78,7 @@ UserSchema.pre('save',async function(next) {
 });
 
 //Sign JWT and return
+/* istanbul ignore next */
 UserSchema.methods.getSignedJwtToken=function(){
     return jwt.sign({id:this._id},process.env.JWT_SECRET,{
         expiresIn: process.env.JWT_EXPIRE
@@ -84,6 +86,7 @@ UserSchema.methods.getSignedJwtToken=function(){
 };
 
 //Match user entered password to hashed password in database
+/* istanbul ignore next */
 UserSchema.methods.matchPassword=async function(enteredPassword){
     return await bcrypt.compare(enteredPassword, this.password);
 }

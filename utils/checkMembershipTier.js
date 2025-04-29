@@ -1,4 +1,4 @@
-exports.checkTier = (point) =>{
+exports.checkTier = (point) => {
     if(point >= 750){
         return 'diamond';
     }else if(point >= 500){
@@ -9,8 +9,9 @@ exports.checkTier = (point) =>{
         return 'silver';
     }else if(point >= 50){
         return 'bronze';
-    }else{
+    }else if(point >= 0){
         return 'none'
+    }else {
+        return null;
     }
-    
 }

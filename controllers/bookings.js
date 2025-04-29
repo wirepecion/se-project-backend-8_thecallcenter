@@ -31,7 +31,7 @@ exports.getBookings= async(req,res,next) => {
     if (req.query.filter) {
         const filters = req.query.filter.split(",");
         queryFilter.status = { $in: filters }; // Case-insensitive search
-        console.log(queryFilter.status)
+        //console.log(queryFilter.status)
          
     }
     queryObj = Booking.find(queryFilter)
@@ -77,7 +77,7 @@ exports.getBookings= async(req,res,next) => {
     } else { //If you are an admin, you can see all!
         if (req.params.hotelId) {
 
-            console.log(req.params.hotelId);
+            //console.log(req.params.hotelId);
 
             query = queryObj.find({hotel:req.params.hotelId})
                 .populate({
@@ -379,7 +379,7 @@ exports.updateBooking = async(req,res,next) => {
         const { checkInDate, checkOutDate, status } = req.body;
 
         if (status && (checkInDate || checkOutDate)) {
-            console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${checkInDate ? 'amount' : ''}${checkInDate && checkOutDate ? ' and ' : ''}${checkOutDate ? 'method' : ''}' in the same request. Not allowed. Booking ID: ${req.params.id}`);
+            // console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${checkInDate ? 'amount' : ''}${checkInDate && checkOutDate ? ' and ' : ''}${checkOutDate ? 'method' : ''}' in the same request. Not allowed. Booking ID: ${req.params.id}`);
 
             return res.status(400).json({
               error: "InvalidRequest",
@@ -518,8 +518,9 @@ exports.updateBooking = async(req,res,next) => {
     
                 if (status === 'completed') {
                     const room = await Room.findById(booking.room);
+
                     const point = room.price/100;;
-                    const user = await User.findById(booking.user).select('+password');
+                    // const user = await User.findById(booking.user).select('+password');
                     user.membershipPoints += point;
                     console.log(`[MEMBERSHIP] ${user.role} ['${user.id}'] successfully updated membership points to '${user.membershipPoints}'. Booking ID: ${req.params.id}`);                    
                     await user.save();

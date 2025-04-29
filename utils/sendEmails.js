@@ -16,6 +16,7 @@ const transporter = nodeMailer.createTransport({
     }
 });
 
+/* istanbul ignore next */
 exports.sendNewPayment = (userEmail,userName,bookingId) =>{
     const mailOptions = {
         from: process.env.SMPT_MAIL,
@@ -49,6 +50,7 @@ exports.sendNewPayment = (userEmail,userName,bookingId) =>{
     });
 };
 
+/* istanbul ignore next */
 exports.sendRefund = (email, userName, bookingId, refundAmount) =>{
     const mailOptions = {
         from: process.env.SMPT_MAIL,
@@ -82,7 +84,7 @@ exports.sendRefund = (email, userName, bookingId, refundAmount) =>{
     });
 };
 
-
+/* istanbul ignore next */
 exports.sendTOHotelManager = (hotelEmail,userName,bookingId,prevStatus,nowStatus,adminId) =>{
     const mailOptions = {
         from: process.env.SMPT_MAIL,

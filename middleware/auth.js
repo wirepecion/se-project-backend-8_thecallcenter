@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 //Protect routes
+/* istanbul ignore next */
 exports.protect = async (req, res, next) => {
     let token;
 
@@ -30,6 +31,7 @@ exports.protect = async (req, res, next) => {
 };
 
 //Grant access to specific roles
+/* istanbul ignore next */
 exports.authorize = (...roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {

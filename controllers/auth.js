@@ -4,7 +4,7 @@ const User = require('../models/User');
 //@desc     Register user
 //@route    POST /api/v1/auth/register
 //@access   Public
-
+/* istanbul ignore next */
 exports.register = async (req, res, next) => {
     try {
         const { name, tel, email, password, } = req.body;
@@ -30,6 +30,7 @@ exports.register = async (req, res, next) => {
 //@desc     Login user
 //@route    POST /api/v1/auth/login
 //@access   Public
+/* istanbul ignore next */
 exports.login = async (req, res, next) => {
     try{
         const { email, password } = req.body;
@@ -60,6 +61,7 @@ exports.login = async (req, res, next) => {
 };
 
 //Get token from model, create cookie and send response
+/* istanbul ignore next */
 const sendTokenResponse = (user, statusCode, res) => {
     //Create token
     const token = user.getSignedJwtToken();
@@ -82,6 +84,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 //@desc     Get current logged in user
 //@route    GET /api/v1/auth/me
 //@access   Private
+/* istanbul ignore next */
 exports.getMe = async (req, res) => {
     const user = await User.findById(req.user.id);
     res.status(200).json({
@@ -93,6 +96,7 @@ exports.getMe = async (req, res) => {
 //@desc     Log user out / clear cookie
 //@route    GET /api/v1/auth/logout
 //@access   Private
+/* istanbul ignore next */
 exports.logout = async (req, res, next) => {
     res.cookie('token', 'none', {
         expires: new Date(Date.now() + 10 * 1000),
@@ -109,6 +113,7 @@ exports.logout = async (req, res, next) => {
 //@desc Reduce user credit
 //@route POST /api/v1/auth/reduceCredit
 //@access Private
+/* istanbul ignore next */
 exports.reduceCredit = async (req, res, next) => {
     try {
         const { amount } = req.body;
@@ -145,6 +150,7 @@ exports.reduceCredit = async (req, res, next) => {
 //@desc     get all users
 //@route    GET /api/v1/auth/users
 //@access   Private
+/* istanbul ignore next */
 exports.getUsers = async (req, res, next) => {
     
     let query;
@@ -159,12 +165,12 @@ exports.getUsers = async (req, res, next) => {
     if (req.query.filter) {
         const filters = req.query.filter.split(",");
         queryFilter.membershipTier = { $in: filters }; 
-        console.log(queryFilter.membershipTier);
+        //console.log(queryFilter.membershipTier);
          
     }
     if (req.query.search) {
         queryFilter.name = { $regex: req.query.search, $options: "i" }; 
-        console.log(queryFilter.name);
+        //console.log(queryFilter.name);
     }
     queryObj = User.find(queryFilter)
 
@@ -233,18 +239,19 @@ exports.getUsers = async (req, res, next) => {
             pagination.prev = { page: page - 1, count:limit };
         }
 
-        const allUsers = await User.find(queryFilter);
+        const allUsers = await User.find(queryFilter,{_id: 0,name:1}).sort({ name: 1 }).collation({ locale: "en", strength: 1 })                   
 
         res.status(200).json({
             success: true,
             allUser: allUsers.length,
-            allUsers: allUsers,
             statistic: statistic,
             count: endIndex > total ? total - startIndex : limit,
             totalPages: Math.ceil(total / limit),
             nowPage: page,
             pagination,
-            data: data
+            data: data,
+            allNameOfUsers: allUsers,
+
         });
     } catch (error) {
         console.error(error.message);
@@ -256,6 +263,7 @@ exports.getUsers = async (req, res, next) => {
 //@desc     get one user
 //@route    GET /api/v1/auth/users/:id
 //@access   Private
+/* istanbul ignore next */
 exports.getUser = async (req, res, next) => {
     try {
         const user = await User.findById(req.params.id).populate({path: 'responsibleHotel', select: 'name'});

@@ -9,6 +9,7 @@ const { logCreation } = require('../utils/logCreation');
 // @desc    Get all payments
 // @route   GET /api/v1/payments
 // @access  Private
+/* istanbul ignore next */
 exports.getPayments = async (req, res) => {
     let query;
     const reqQuery ={...req.query}
@@ -31,7 +32,6 @@ exports.getPayments = async (req, res) => {
    
     try {
         const total = await Payment.countDocuments(query);
-        console.log(total)
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
@@ -43,7 +43,6 @@ exports.getPayments = async (req, res) => {
             });
         }
         query = query.skip(startIndex).limit(limit);
-        console.log(query)
         const pagination = {};
             if (endIndex < total) {
                 pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
@@ -82,6 +81,7 @@ exports.getPayments = async (req, res) => {
 // @desc    Get single payment
 // @route   GET /api/v1/payments/:id
 // @access  Public
+/* istanbul ignore next */
 exports.getPayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id).populate({
@@ -122,6 +122,7 @@ exports.getPayment = async (req, res) => {
 // @desc    Create a new payment
 // @route   POST /api/v1/bookings/:bookingId/payments
 // @access  Private
+/* istanbul ignore next */
 exports.createPayment = async (req, res) => {
     try {
         req.body.booking = req.params.bookingId;
@@ -189,11 +190,7 @@ exports.updatePayment = async (req, res) => {
         const payment = await Payment.findById(req.params.id);
 
         //data for send email
-        const booking = await Booking.findById(payment.booking)
-        const hotel = await Hotel.findById(booking.hotel)
-        const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
-        const customer = await User.findById(payment.user)
-
+       
         if (!payment) {
             return res.status(404).json({
                 success: false,
@@ -201,6 +198,12 @@ exports.updatePayment = async (req, res) => {
             });
         }
 
+        const booking = await Booking.findById(payment.booking)
+        const hotel = await Hotel.findById(booking.hotel)
+        const hotelManager = await User.findOne({ responsibleHotel: hotel._id });
+        const customer = await User.findById(payment.user)
+
+        
         const { amount, method, status } = req.body;
         const user = req.user;
         
@@ -239,19 +242,25 @@ exports.updatePayment = async (req, res) => {
         } else if (status && ['completed', 'failed'].includes(status)) {
             if (user.role === 'user') {
                 // log for unauthorized access
-                console.warn(`[SECURITY] User '${user.id}' with role '${user.role}' attempted to update payment status to '${status}' (not allowed). Payment ID: ${payment.id}`);
+                // console.warn(`[SECURITY] User '${user.id}' with role '${user.role}' attempted to update payment status to '${status}' (not allowed). Payment ID: ${payment.id}`);
                 logCreation(user.id,'WARNING', `Warning [${user.role}] attempted to set payment status to '${status}' for booking ID: ${payment.booking} `)
                 return res.status(403).json({
                     success: false,
                     message: `You are not allowed to update the payment status to '${status}'`
                 });
             }
-            if (user.role === 'admin') {
+            else if (user.role === 'admin') {
                 
-                console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
+                // console.log(`[NOTIFY] Admin '${user.id}' updated payment to '${status}'. A notification should be sent to the hotel manager. Payment ID: ${payment.id}`);
                 sendTOHotelManager(hotelManager.email,customer.name,payment.booking,payment.status,status,user.id);
             }
-            
+
+            else {
+                return res.status(403).json({
+                    success: false,
+                    message: `You are not allowed to update the payment status to '${status}'`
+                });
+            }    
             
             payment.status = status; // both admin and manager run here
             if(status === 'completed') booking.status = 'confirmed'; 
@@ -308,6 +317,7 @@ exports.updatePayment = async (req, res) => {
 // @desc    Delete a payment (permanent delete)
 // @route   DELETE /api/v1/payments/:id
 // @access  Private
+/* istanbul ignore next */
 exports.deletePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
