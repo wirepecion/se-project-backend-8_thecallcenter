@@ -165,12 +165,12 @@ exports.getUsers = async (req, res, next) => {
     if (req.query.filter) {
         const filters = req.query.filter.split(",");
         queryFilter.membershipTier = { $in: filters }; 
-        console.log(queryFilter.membershipTier);
+        //console.log(queryFilter.membershipTier);
          
     }
     if (req.query.search) {
         queryFilter.name = { $regex: req.query.search, $options: "i" }; 
-        console.log(queryFilter.name);
+        //console.log(queryFilter.name);
     }
     queryObj = User.find(queryFilter)
 
