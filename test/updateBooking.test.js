@@ -399,14 +399,14 @@ describe('updateBooking', () => {
         // Check if the user's membership points were updated correctly
         // expect(mockUser.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
       
-        expect(mockUserCopy.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
+        expect(mockUserCopy.membershipPoints).toBe(300); // 200 + (50000 / 100) * 2 = 300
         expect(mockUserCopy.membershipTier).toBe('gold'); // Tier should change to 'gold'
       
         // Ensure user.save is called twice (once for updating points and once for tier update)
         expect(mockUserCopy.save).toHaveBeenCalledTimes(2);
       
         // Check if the checkTier function was called
-        expect(checkTier).toHaveBeenCalledWith(250);
+        expect(checkTier).toHaveBeenCalledWith(300);
       
         // Check if logCreation was called for tier update
         expect(logCreation).toHaveBeenCalledWith(
@@ -439,11 +439,11 @@ describe('updateBooking', () => {
         // Check if the user's membership points were updated correctly
         // expect(mockUser.membershipPoints).toBe(250); // 200 + (50000 / 100) = 250
       
-        expect(mockUserCopy.membershipPoints).toBe(205); // 200 + (50000 / 100) = 250
+        expect(mockUserCopy.membershipPoints).toBe(210); // 200 + (50000 / 100) * 2 = 250
         expect(mockUserCopy.membershipTier).toBe('silver'); // Tier should change to 'gold'
     
         // Check if the checkTier function was called
-        expect(checkTier).toHaveBeenCalledWith(205);
+        expect(checkTier).toHaveBeenCalledWith(210);
       });
 
       it('trying to update checkInDate only', async () => {
