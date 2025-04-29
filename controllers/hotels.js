@@ -17,7 +17,7 @@ exports.getHotels = async(req,res,next) => {
 
         //Loop over removeFields and delete them from reqQuery
         removeFields.forEach(param => delete reqQuery[param]);
-        console.log(reqQuery);
+        //console.log(reqQuery);
 
         //Create query string
         let queryStr = JSON.stringify(req.query);
@@ -68,7 +68,7 @@ exports.getHotels = async(req,res,next) => {
             };
         }
 
-        console.log(req.query);
+        //console.log(req.query);
         res.status(200).json({
             success:true, 
             count:hotels.length, 

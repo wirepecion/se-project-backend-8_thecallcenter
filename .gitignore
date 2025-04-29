@@ -1,5 +1,13 @@
 # ignore all node modules
-node_modules/*
+/node_modules
+
 # ignore config file
 config/config.env
+
 .vercel
+
+.env
+
+# ignore coverage reports
+/coverage
+

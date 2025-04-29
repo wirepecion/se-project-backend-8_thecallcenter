@@ -1,15 +1,11 @@
 const express = require('express');
+const { getBookings, getBooking, addBooking, updateBooking, deleteBooking } = require('../controllers/bookings');
+const { protect, authorize } = require('../middleware/auth');
 
-const {getBookings, getBooking, addBooking, updateBooking, deleteBooking} = require('../controllers/bookings');
-
-//Incluse other resource routers
 const paymentsRouter = require('./payments');
 
 const router = express.Router({mergeParams:true});
 
-const {protect, authorize} = require('../middleware/auth');
-
-//Re-route into other resource routers
 router.use('/:bookingId/payments', paymentsRouter);
 
 router.route('/')
@@ -101,11 +97,19 @@ module.exports = router;
  *       401:
  *         description: Unauthorized - Token missing or invalid
  *
+ * /rooms/{roomId}/bookings:
  *   post:
- *     summary: Create a new booking
+ *     summary: Create a new booking for a specific room
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - name: roomId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the room to book
  *     requestBody:
  *       required: true
  *       content:
@@ -113,43 +117,60 @@ module.exports = router;
  *           schema:
  *             type: object
  *             required:
- *               - user
- *               - room
- *               - hotel
  *               - checkInDate
  *               - checkOutDate
  *             properties:
- *               user:
- *                 type: string
- *               room:
- *                 type: string
- *               hotel:
- *                 type: string
  *               checkInDate:
  *                 type: string
  *                 format: date-time
  *               checkOutDate:
  *                 type: string
  *                 format: date-time
+ *               paymentMethod:
+ *                 type: string
+ *                 description: Optional payment method (e.g., creditCard, transfer)
  *           example:
- *             user: "609bd9991452242d88d36e12"
- *             room: "609bd9991452242d88d36e14"
- *             hotel: "609bd9991452242d88d36e15"
  *             checkInDate: "2025-05-01T15:00:00Z"
  *             checkOutDate: "2025-05-07T12:00:00Z"
+ *             paymentMethod: "creditCard"
  *     responses:
  *       201:
  *         description: Booking created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Booking'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     booking:
+ *                       $ref: '#/components/schemas/Booking'
+ *                     payment:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         booking:
+ *                           type: string
+ *                         user:
+ *                           type: string
+ *                         amount:
+ *                           type: number
+ *                         status:
+ *                           type: string
  *       400:
  *         description: Validation error or bad input
  *       401:
  *         description: Unauthorized - Token missing or invalid
  *       403:
  *         description: Forbidden - Not enough permissions
+ *       404:
+ *         description: Room not found
  *
  * /bookings/{id}:
  *   get:
