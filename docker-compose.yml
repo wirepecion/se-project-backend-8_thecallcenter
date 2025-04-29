@@ -1,0 +1,24 @@
+services:
+    api:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: callcenter-be
+        restart: unless-stopped
+        ports:
+            - "${PORT}:${PORT}"
+        env_file:
+            - config/config.env
+        environment:
+            - PORT=${PORT}
+            - NODE_ENV=${NODE_ENV}
+            - MONGO_URI=${MONGO_URI}
+            - JWT_SECRET=${JWT_SECRET}
+            - JWT_EXPIRE=${JWT_EXPIRE}
+            - JWT_COOKIE_EXPIRE=${JWT_COOKIE_EXPIRE}
+            - CORS_ORIGIN=${CORS_ORIGIN}
+            - SERVER_URL=${SERVER_URL}
+
+networks:
+    default:
+        driver: bridge
