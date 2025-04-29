@@ -283,10 +283,6 @@ exports.updatePayment = async (req, res) => {
             }
 
             else {
-                return res.status(403).json({
-                    success: false,
-                    message: `You are not allowed to update the payment status to '${status}'`
-                });
             }    
             
             payment.status = status; // both admin and manager run here
