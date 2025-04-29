@@ -11,54 +11,82 @@ const { logCreation } = require('../utils/logCreation');
 // @access  Private
 /* istanbul ignore next */
 exports.getPayments = async (req, res) => {
-    let query;
-    const reqQuery ={...req.query}
-    const removeFields = ['sort','page','limit'];
-    removeFields.forEach(param => delete reqQuery[param]);
-    let queryStr = JSON.stringify(reqQuery);
-    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
-    query = Payment.find(JSON.parse(queryStr));
-    if (req.user.role !== 'admin') {
-        query = query.find({user:req.user.id});
-    } else {
-        query = query.find({});
-    }
-    if (req.query.sort) {
-        const sortBy = req.query.sort.split(',').join(' ');
-        query = query.sort(sortBy);
-    } else {
-        query = query.sort('-createdAt');
-    }
-   
     try {
-        const total = await Payment.countDocuments(query);
+        // Step 1: Prepare base filter from query params
+        const reqQuery = { ...req.query };
+        const removeFields = ['sort', 'page', 'limit'];
+        removeFields.forEach(param => delete reqQuery[param]);
+
+        // Convert MongoDB operators
+        let queryStr = JSON.stringify(reqQuery);
+        queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+        const queryFilter = JSON.parse(queryStr);
+
+        // Step 2: Add role-based filtering
+        if (req.user.role !== 'admin') {
+            queryFilter.user = req.user.id;
+        }
+
+        // Step 3: Add status filter (if provided)
+        if (req.query.status) {
+            const statuses = req.query.status.split(",");
+            queryFilter.status = { $in: statuses };
+        }
+
+        // Step 4: Build Mongoose query from final filter
+        let query = Payment.find(queryFilter);
+
+        // Step 5: Apply sorting
+        if (req.query.sort) {
+            const sortBy = req.query.sort.split(',').join(' ');
+            query = query.sort(sortBy);
+        } else {
+            query = query.sort('-createdAt');
+        }
+
+        // Step 6: Pagination
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
-        if(startIndex > total) {
+
+        const total = await Payment.countDocuments(queryFilter);
+
+        if (startIndex > total) {
             return res.status(400).json({
-                success:false,
+                success: false,
                 message: 'This page does not exist'
             });
         }
+
         query = query.skip(startIndex).limit(limit);
+
         const pagination = {};
-            if (endIndex < total) {
-                pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
-            }
-            
-            if (startIndex > 0) {
-                pagination.prev = { page: page - 1, count:limit };
-            }
+        if (endIndex < total) {
+            pagination.next = {
+                page: page + 1,
+                count: Math.min(limit, total - endIndex),
+            };
+        }
+
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                count: limit,
+            };
+        }
+
+        // Step 7: Populate relations
         const payments = await query.populate({
-                path: 'booking',
-                populate: [
-                  { path: 'room' },
-                  { path: 'hotel' },
-                  { path: 'user' }
-                ]
-              });
+            path: 'booking',
+            populate: [
+                { path: 'room' },
+                { path: 'hotel' },
+                { path: 'user' }
+            ]
+        });
+
+        // Step 8: Send response
         res.status(200).json({
             success: true,
             count: payments.length,
@@ -70,7 +98,6 @@ exports.getPayments = async (req, res) => {
         });
     } catch (error) {
         console.error(error.message);
-        console.error(error);
         res.status(400).json({
             success: false,
             message: 'Error occurred while retrieving payments',
