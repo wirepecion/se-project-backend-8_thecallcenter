@@ -31,8 +31,6 @@ exports.getBookings= async(req,res,next) => {
     if (req.query.filter) {
         const filters = req.query.filter.split(",");
         queryFilter.status = { $in: filters }; // Case-insensitive search
-        //console.log(queryFilter.status)
-         
     }
     queryObj = Booking.find(queryFilter)
     
@@ -120,8 +118,6 @@ exports.getBookings= async(req,res,next) => {
         }
     }
     
-   
-
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');
         query = query.select(fields);
