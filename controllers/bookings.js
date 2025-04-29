@@ -479,10 +479,11 @@ exports.updateBooking = async(req,res,next) => {
 
                     // Remove the period from unavailablePeriod array if it matches the booking's dates
                     room.unavailablePeriod = room.unavailablePeriod.filter((period) => {
-                        return !(
-                            new Date(period.startDate).toISOString === checkInDate &&
-                            new Date(period.endDate).toISOString === checkOutDate
-                        );
+                        // return !(
+                        //     new Date(period.startDate).toISOString === checkInDate &&
+                        //     new Date(period.endDate).toISOString === checkOutDate
+                        // );
+                        console.log("Running 489999999999999999999999999999999999999999999999999999")
                     });
 
                     // Save the updated room document

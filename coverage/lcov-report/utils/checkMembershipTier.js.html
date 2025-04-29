@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for utils/paymentTimeoutUtil.js</title>
+    <title>Code coverage report for utils/checkMembershipTier.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">utils</a> paymentTimeoutUtil.js</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">utils</a> checkMembershipTier.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">25% </span>
+                <span class="strong">8.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>3/12</span>
+                <span class='fraction'>1/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">25% </span>
+                <span class="strong">8.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>3/12</span>
+                <span class='fraction'>1/12</span>
             </div>
         
             
@@ -78,14 +78,11 @@
 <a name='L13'></a><a href='#L13'>13</a>
 <a name='L14'></a><a href='#L14'>14</a>
 <a name='L15'></a><a href='#L15'>15</a>
-<a name='L16'></a><a href='#L16'>16</a>
-<a name='L17'></a><a href='#L17'>17</a>
-<a name='L18'></a><a href='#L18'>18</a>
-<a name='L19'></a><a href='#L19'>19</a>
-<a name='L20'></a><a href='#L20'>20</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L16'></a><a href='#L16'>16</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -94,33 +91,24 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// utils/paymentTimeoutUtil.js
-const Payment = require('../models/Payment'); 
-const logCreation = require('./logCreation'); 
-exports.schedulePaymentTimeout = <span class="fstat-no" title="function not covered" >(p</span>aymentId, timeout = <span class="branch-0 cbranch-no" title="branch not covered" >30000)</span> =&gt; { //30 seconds default timeout (change later)
-<span class="cstat-no" title="statement not covered" >  setTimeout(<span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    try {</span>
-      const updatedPayment = <span class="cstat-no" title="statement not covered" >await Payment.findById(paymentId);</span>
-<span class="cstat-no" title="statement not covered" >      if (updatedPayment &amp;&amp; updatedPayment.status === 'unpaid') {</span>
-<span class="cstat-no" title="statement not covered" >        updatedPayment.status = 'failed';</span>
-<span class="cstat-no" title="statement not covered" >        await updatedPayment.save();</span>
-        //log for payment failure
-<span class="cstat-no" title="statement not covered" >        console.log(`Payment ${paymentId} status updated to 'failed' due to timeout.`);</span>
-<span class="cstat-no" title="statement not covered" >        logCreation(user.id, 'PAYMENT', `[Timeout] Payment ID: ${updatedPayment.id} for booking ID: ${updatedPayment.booking}`)</span>
-      }
-    } catch (err) {
-<span class="cstat-no" title="statement not covered" >      console.error(`Failed to update payment ${paymentId} after timeout:`, err);</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">exports.checkTier = <span class="fstat-no" title="function not covered" >(p</span>oint) =&gt;{
+<span class="cstat-no" title="statement not covered" >    if(point &gt;= 750){</span>
+<span class="cstat-no" title="statement not covered" >        return 'diamond';</span>
+    }else <span class="cstat-no" title="statement not covered" >if(point &gt;= 500){</span>
+<span class="cstat-no" title="statement not covered" >        return 'platinum';</span>
+    }else <span class="cstat-no" title="statement not covered" >if(point &gt;= 250){</span>
+<span class="cstat-no" title="statement not covered" >        return 'gold';</span>
+    }else <span class="cstat-no" title="statement not covered" >if(point &gt;= 125){</span>
+<span class="cstat-no" title="statement not covered" >        return 'silver';</span>
+    }else <span class="cstat-no" title="statement not covered" >if(point &gt;= 50){</span>
+<span class="cstat-no" title="statement not covered" >        return 'bronze';</span>
+    }else{
+<span class="cstat-no" title="statement not covered" >        return 'none'</span>
     }
-  }, timeout);
-};
-&nbsp;</pre></td></tr></table></pre>
+    
+}</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
