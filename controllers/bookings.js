@@ -379,7 +379,7 @@ exports.updateBooking = async(req,res,next) => {
         const { checkInDate, checkOutDate, status } = req.body;
 
         if (status && (checkInDate || checkOutDate)) {
-            console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${checkInDate ? 'amount' : ''}${checkInDate && checkOutDate ? ' and ' : ''}${checkOutDate ? 'method' : ''}' in the same request. Not allowed. Booking ID: ${req.params.id}`);
+            // console.log(`[VALIDATION] ${user.role} ['${user.id}'] attempted to update 'status' together with '${checkInDate ? 'amount' : ''}${checkInDate && checkOutDate ? ' and ' : ''}${checkOutDate ? 'method' : ''}' in the same request. Not allowed. Booking ID: ${req.params.id}`);
 
             return res.status(400).json({
               error: "InvalidRequest",
