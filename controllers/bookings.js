@@ -31,7 +31,7 @@ exports.getBookings= async(req,res,next) => {
     if (req.query.filter) {
         const filters = req.query.filter.split(",");
         queryFilter.status = { $in: filters }; // Case-insensitive search
-        console.log(queryFilter.status)
+        //console.log(queryFilter.status)
          
     }
     queryObj = Booking.find(queryFilter)
@@ -77,7 +77,7 @@ exports.getBookings= async(req,res,next) => {
     } else { //If you are an admin, you can see all!
         if (req.params.hotelId) {
 
-            console.log(req.params.hotelId);
+            //console.log(req.params.hotelId);
 
             query = queryObj.find({hotel:req.params.hotelId})
                 .populate({

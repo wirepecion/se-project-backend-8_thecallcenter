@@ -32,7 +32,6 @@ exports.getPayments = async (req, res) => {
    
     try {
         const total = await Payment.countDocuments(query);
-        console.log(total)
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
@@ -44,7 +43,6 @@ exports.getPayments = async (req, res) => {
             });
         }
         query = query.skip(startIndex).limit(limit);
-        console.log(query)
         const pagination = {};
             if (endIndex < total) {
                 pagination.next = { page: page + 1, count: (endIndex+limit)>total?total-(startIndex+limit):limit };
